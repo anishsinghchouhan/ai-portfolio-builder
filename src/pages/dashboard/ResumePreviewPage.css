@@ -1,0 +1,329 @@
+/* Dedicated Resume Preview Page - Senior Product Designer System */
+@import "../../styles/variables.css";
+
+.preview-page-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.preview-page-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.preview-page-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Background Grids & Radial Glows */
+.preview-bg-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.preview-bg-glow {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.14) 0%, rgba(14, 165, 233, 0.05) 55%, transparent 80%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+/* Top Toolbar Bar */
+.preview-top-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  z-index: 10;
+}
+
+.file-meta-header h2 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.preview-page-root.dark .file-meta-header h2 { color: #ffffff; }
+.preview-page-root.light .file-meta-header h2 { color: #0f172a; }
+
+.file-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.ats-score-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+}
+
+.top-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-preview-action {
+  height: 42px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-preview-action.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #ffffff;
+}
+
+.btn-preview-action.secondary:hover {
+  background: rgba(129, 140, 248, 0.18);
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.btn-preview-action.primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+}
+
+.btn-preview-action.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55);
+}
+
+.btn-preview-action.delete {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.btn-preview-action.delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Two Column Layout: PDF Reader Panel + File Metadata Card */
+.preview-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.75rem;
+  position: relative;
+  z-index: 10;
+  flex-grow: 1;
+}
+
+/* PDF READER PANEL */
+.pdf-viewer-card {
+  border-radius: 28px;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Reader Toolbar Controls (Zoom In/Out, Fullscreen, Page Num) */
+.reader-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-full);
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  margin-bottom: 1.25rem;
+}
+
+.zoom-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-zoom-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-zoom-icon:hover {
+  background: rgba(129, 140, 248, 0.2);
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.zoom-val-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  width: 48px;
+  text-align: center;
+}
+
+.page-num-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+/* PDF Mockup Canvas Sheet */
+.pdf-document-sheet {
+  flex-grow: 1;
+  min-height: 620px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  padding: 3rem 2.5rem;
+  color: #0f172a;
+  text-align: left;
+  box-sizing: border-box;
+  overflow-y: auto;
+  transition: transform 0.2s ease;
+}
+
+.pdf-header-demo h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.pdf-header-demo p {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 0 0 1.25rem 0;
+}
+
+.pdf-divider {
+  height: 2px;
+  background: #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.pdf-section-block {
+  margin-bottom: 1.5rem;
+}
+
+.pdf-section-block h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pdf-section-block p {
+  font-size: 0.85rem;
+  color: #334155;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pdf-bullet-list {
+  padding-left: 1.2rem;
+  margin: 0.5rem 0 0 0;
+  font-size: 0.83rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* File Metadata Sidebar Card */
+.file-metadata-sidebar-card {
+  border-radius: 28px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  height: fit-content;
+  text-align: left;
+}
+
+.file-metadata-sidebar-card h3 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 1.25rem 0;
+}
+
+.meta-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.meta-detail-row label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.meta-detail-row span {
+  font-size: 0.88rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .preview-main-grid {
+    grid-template-columns: 1fr;
+  }
+}

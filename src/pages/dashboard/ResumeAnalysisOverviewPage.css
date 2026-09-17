@@ -1,0 +1,331 @@
+/* Dedicated Resume Analysis Overview Page - Senior Product Designer System */
+@import "../../styles/variables.css";
+
+.analysis-page-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.analysis-page-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.analysis-page-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Background Mesh & Radial Glows */
+.analysis-bg-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.analysis-bg-glow {
+  position: absolute;
+  top: 25%;
+  right: 15%;
+  width: 800px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.16) 0%, rgba(14, 165, 233, 0.05) 55%, transparent 80%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+/* Fixed Theme Toggle Button */
+.theme-toggle-analysis {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.analysis-page-root.dark .theme-toggle-analysis {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #94a3b8;
+}
+
+.analysis-page-root.light .theme-toggle-analysis {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Header Section */
+.analysis-header-bar {
+  margin-bottom: 2rem;
+  text-align: left;
+  z-index: 10;
+}
+
+.analysis-header-bar h1 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.analysis-page-root.dark .analysis-header-bar h1 { color: #ffffff; }
+.analysis-page-root.light .analysis-header-bar h1 { color: #0f172a; }
+
+.analysis-header-bar p {
+  font-size: var(--text-small);
+  margin: 0;
+}
+
+.analysis-page-root.dark .analysis-header-bar p { color: #94a3b8; }
+.analysis-page-root.light .analysis-header-bar p { color: #64748b; }
+
+/* 3 METRIC CARDS TOP GRID */
+.analysis-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+.analysis-metric-card {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.analysis-page-root.dark .analysis-metric-card {
+  background: rgba(17, 24, 39, 0.82);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.analysis-page-root.light .analysis-metric-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.analysis-metric-card:hover {
+  transform: translateY(-4px);
+}
+
+.metric-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.metric-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.metric-value-huge {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  line-height: 1;
+}
+
+.metric-value-huge.indigo { color: #818cf8; }
+.metric-value-huge.emerald { color: #34d399; }
+.metric-value-huge.cyan { color: #38bdf8; }
+
+.metric-sub-label {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* AI EXECUTIVE SUMMARY CARD */
+.ai-summary-card {
+  border-radius: 24px;
+  padding: 1.75rem 2rem;
+  box-sizing: border-box;
+  text-align: left;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(14, 165, 233, 0.15));
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  box-shadow: 0 12px 40px rgba(79, 70, 229, 0.15);
+  z-index: 10;
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.ai-summary-header h3 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ai-summary-text {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.analysis-page-root.dark .ai-summary-text { color: #cbd5e1; }
+.analysis-page-root.light .ai-summary-text { color: #334155; }
+
+/* TWO COLUMN GRID: Missing Info & Improvement Suggestions */
+.analysis-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  margin-bottom: 2.25rem;
+  z-index: 10;
+}
+
+.analysis-section-box {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.analysis-page-root.dark .analysis-section-box {
+  background: rgba(17, 24, 39, 0.82);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(129, 140, 248, 0.22);
+}
+
+.analysis-page-root.light .analysis-section-box {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+.analysis-section-box h3 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.analysis-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-dark);
+}
+
+.analysis-page-root.light .analysis-item-row {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.item-bullet-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.item-content-text h5 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+}
+
+.analysis-page-root.dark .item-content-text h5 { color: #ffffff; }
+.analysis-page-root.light .item-content-text h5 { color: #0f172a; }
+
+.item-content-text p {
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.analysis-page-root.dark .item-content-text p { color: #94a3b8; }
+.analysis-page-root.light .item-content-text p { color: #64748b; }
+
+/* Continue Analysis CTA Footer Bar */
+.analysis-footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border-dark);
+  z-index: 10;
+}
+
+.btn-continue-analysis {
+  height: 48px;
+  padding: 0 2.25rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: var(--text-button);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-continue-analysis:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(79, 70, 229, 0.65);
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .analysis-metrics-grid,
+  .analysis-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+}

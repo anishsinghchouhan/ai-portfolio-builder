@@ -1,0 +1,11 @@
+import express from "express";
+import { getMe, updateMe } from "../controllers/userController.js";
+import { protect } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+// Protected user routes
+router.get("/me", protect, getMe);
+router.patch("/me", protect, updateMe);
+
+export default router;

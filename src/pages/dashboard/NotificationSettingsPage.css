@@ -1,0 +1,90 @@
+/* Task 54: Notification Settings Page Stylesheet */
+@import "../../styles/variables.css";
+
+.notif-settings-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.notif-settings-root.dark { background-color: #0b0f19; color: #f1f5f9; }
+.notif-settings-root.light { background-color: #f8fafc; color: #0f172a; }
+
+.notif-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.notif-card-box {
+  border-radius: 24px;
+  padding: 2rem;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  text-align: left;
+  max-width: 800px;
+}
+
+.notif-settings-root.light .notif-card-box {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.toggle-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.toggle-item-row:last-child { border-bottom: none; }
+
+.toggle-switch-btn {
+  width: 48px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch-btn.active {
+  background: #10b981;
+}
+
+.toggle-switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s ease;
+}
+
+.toggle-switch-btn.active .toggle-switch-thumb {
+  transform: translateX(22px);
+}
+
+.btn-save-notif {
+  height: 44px;
+  padding: 0 1.75rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}

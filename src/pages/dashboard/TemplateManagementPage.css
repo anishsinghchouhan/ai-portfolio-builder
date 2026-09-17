@@ -1,0 +1,48 @@
+/* Task 58: Template Management Page Stylesheet */
+@import "../../styles/variables.css";
+
+.tpl-mgmt-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.tpl-mgmt-root.dark { background-color: #0b0f19; color: #f1f5f9; }
+.tpl-mgmt-root.light { background-color: #f8fafc; color: #0f172a; }
+
+.tpl-mgmt-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.tpl-mgmt-card-box {
+  border-radius: 24px;
+  padding: 1.75rem;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  text-align: left;
+}
+
+.tpl-mgmt-root.light .tpl-mgmt-card-box {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.admin-tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .admin-tpl-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,312 @@
+/* Dedicated Resume History Page - Senior UX Designer System */
+@import "../../styles/variables.css";
+
+.history-page-root {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.history-card-container {
+  width: 100%;
+  border-radius: 28px;
+  padding: 2rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Header & Upload New Version Button */
+.history-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.history-title-group h2 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.history-title-group p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.btn-upload-new-version {
+  height: 42px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-upload-new-version:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55);
+}
+
+/* Controls Bar: Search & Filters */
+.history-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.history-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 320px;
+}
+
+.history-search-field input {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  padding: 0 1rem 0 2.5rem;
+  font-size: var(--text-small);
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.history-search-field input:focus {
+  border-color: #818cf8;
+}
+
+.history-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.history-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(11, 15, 25, 0.6);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-dark);
+}
+
+.history-filter-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-filter-btn.active {
+  background: rgba(129, 140, 248, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(129, 140, 248, 0.4);
+}
+
+/* Resume Versions Cards List */
+.history-versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.version-card-item {
+  border-radius: 20px;
+  padding: 1.15rem 1.35rem;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-dark);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.version-card-item.active-version {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.version-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.version-item-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.version-badge-tag {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.version-info-body h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-active-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.version-info-body p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Action Buttons Right */
+.version-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-version-action {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-version-action:hover {
+  background: rgba(129, 140, 248, 0.2);
+  color: #ffffff;
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.btn-version-action.delete:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Pagination Bar Footer */
+.history-pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border-dark);
+  font-size: var(--text-small);
+  color: #94a3b8;
+}
+
+.pagination-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-page-step {
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-page-step:hover:not(:disabled) {
+  background: rgba(129, 140, 248, 0.2);
+}
+
+.btn-page-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Empty State Box */
+.history-empty-state {
+  padding: 4rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.history-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive Rules */
+@media (max-width: 768px) {
+  .history-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .history-search-field {
+    width: 100%;
+  }
+
+  .version-card-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .version-item-actions {
+    align-self: flex-end;
+  }
+}

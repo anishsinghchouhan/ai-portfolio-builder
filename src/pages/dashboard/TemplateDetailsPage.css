@@ -1,0 +1,294 @@
+/* Dedicated Template Details Page - Senior SaaS UI System */
+@import "../../styles/variables.css";
+
+.template-details-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.25rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.template-details-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.template-details-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Background Grids & Radial Glows */
+.tpl-details-bg-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.tpl-details-bg-glow {
+  position: absolute;
+  top: 20%;
+  left: 45%;
+  width: 850px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.16) 0%, rgba(14, 165, 233, 0.05) 55%, transparent 80%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+/* Header Action Toolbar */
+.tpl-details-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+.btn-back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-back-link:hover {
+  color: #ffffff;
+}
+
+.tpl-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-live-demo-outline {
+  height: 44px;
+  padding: 0 1.35rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #ffffff;
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-live-demo-outline:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.btn-use-template-huge {
+  height: 44px;
+  padding: 0 1.75rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(79, 70, 229, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-use-template-huge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.6);
+}
+
+/* LARGE HERO PREVIEW CANVAS */
+.large-hero-preview-box {
+  width: 100%;
+  border-radius: 28px;
+  height: 460px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.25rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  z-index: 10;
+}
+
+.hero-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* SCREENSHOTS LIGHTBOX THUMBNAIL GALLERY */
+.screenshots-gallery-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  z-index: 10;
+}
+
+.screenshot-thumb-item {
+  width: 150px;
+  height: 95px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.screenshot-thumb-item.active {
+  border-color: #818cf8;
+  box-shadow: 0 0 16px rgba(129, 140, 248, 0.5);
+}
+
+.screenshot-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* TWO COLUMN MAIN CONTENT GRID (Features & Author Sidebar + Customer Reviews) */
+.details-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  z-index: 10;
+  margin-bottom: 3rem;
+}
+
+.details-content-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  text-align: left;
+}
+
+/* Template Info Card */
+.details-section-card {
+  border-radius: 24px;
+  padding: 2rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.template-meta-header h1 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.85rem;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.025em;
+}
+
+.template-meta-header p {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+/* Features List Grid */
+.features-list-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.feature-pill-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* REVIEWS & AUTHOR SIDEBAR CARD */
+.details-sidebar-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.author-profile-card {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+}
+
+.author-profile-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+}
+
+.author-row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* SIMILAR TEMPLATES CARDS BOTTOM ROW */
+.similar-templates-section {
+  text-align: left;
+  z-index: 10;
+}
+
+.similar-templates-section h2 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 1.25rem 0;
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .details-main-grid {
+    grid-template-columns: 1fr;
+  }
+}

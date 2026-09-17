@@ -1,0 +1,277 @@
+/* Dedicated Theme Customization Page - Senior SaaS UI System */
+@import "../../styles/variables.css";
+
+.theme-page-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.theme-page-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.theme-page-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Header Toolbar Bar */
+.theme-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  z-index: 10;
+}
+
+.theme-title-group h1 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.theme-page-root.dark .theme-title-group h1 { color: #ffffff; }
+.theme-page-root.light .theme-title-group h1 { color: #0f172a; }
+
+.theme-title-group p {
+  font-size: var(--text-small);
+  color: #94a3b8;
+  margin: 0;
+}
+
+.theme-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-reset-theme {
+  height: 42px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-dark);
+  color: #cbd5e1;
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset-theme:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-apply-theme {
+  height: 42px;
+  padding: 0 1.5rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-apply-theme:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55);
+}
+
+/* MAIN TWO COLUMN SPLIT (Controls Sidebar + Real-time Live Canvas) */
+.theme-workspace-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1.75rem;
+  z-index: 10;
+  flex-grow: 1;
+}
+
+/* LEFT CONTROLS CARD PANE */
+.theme-controls-card {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  text-align: left;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.theme-page-root.light .theme-controls-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.control-section-block h3 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-page-root.dark .control-section-block h3 { color: #ffffff; }
+.theme-page-root.light .control-section-block h3 { color: #0f172a; }
+
+/* THEME GALLERY PRESETS GRID */
+.theme-gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-preset-theme {
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-dark);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-page-root.light .btn-preset-theme {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.btn-preset-theme.active {
+  background: rgba(129, 140, 248, 0.2);
+  color: #ffffff;
+  border-color: rgba(129, 140, 248, 0.45);
+}
+
+.preset-dot-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* COLOR SWATCHES ROW */
+.color-swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-swatch-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.color-swatch-btn:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch-btn.selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* SELECT DROPDOWNS */
+.theme-select-dropdown {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  padding: 0 1rem;
+  font-size: 0.88rem;
+  color: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+.theme-page-root.light .theme-select-dropdown {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* BUTTON STYLE & RADIUS PILLS */
+.button-style-options {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-style-pill {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-dark);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.btn-style-pill.active {
+  background: rgba(129, 140, 248, 0.25);
+  color: #ffffff;
+  border-color: #818cf8;
+}
+
+/* RIGHT LIVE PREVIEW CANVAS PANE */
+.theme-preview-card {
+  border-radius: 28px;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  text-align: left;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .theme-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,300 @@
+/* Dedicated Section Editor Page - Senior Product Designer System */
+@import "../../styles/variables.css";
+
+.section-editor-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.section-editor-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.section-editor-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Header Bar */
+.editor-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  z-index: 10;
+}
+
+.editor-title-group h1 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.section-editor-root.dark .editor-title-group h1 { color: #ffffff; }
+.section-editor-root.light .editor-title-group h1 { color: #0f172a; }
+
+.editor-title-group p {
+  font-size: var(--text-small);
+  color: #94a3b8;
+  margin: 0;
+}
+
+.btn-save-section {
+  height: 42px;
+  padding: 0 1.5rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-save-section:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.55);
+}
+
+/* SECTION TABS ROW (About, Skills, Experience, Projects, Education, Certifications, Contact) */
+.section-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.75rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  z-index: 10;
+}
+
+.btn-editor-tab {
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-dark);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.section-editor-root.light .btn-editor-tab {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.btn-editor-tab.active {
+  background: rgba(129, 140, 248, 0.2);
+  color: #ffffff;
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 2px 10px rgba(129, 140, 248, 0.15);
+}
+
+.section-editor-root.light .btn-editor-tab.active {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+/* MAIN EDITING SPLIT GRID (Fields Form + Live Preview Canvas) */
+.editor-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  z-index: 10;
+  flex-grow: 1;
+}
+
+/* LEFT FORM PANE */
+.editor-form-card {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  text-align: left;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.section-editor-root.light .editor-form-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.section-editor-root.light .form-field-group label {
+  color: #334155;
+}
+
+.editor-input-text {
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.section-editor-root.light .editor-input-text {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.editor-input-text:focus {
+  border-color: #818cf8;
+}
+
+/* RICH TEXT TOOLBAR & TEXTAREA */
+.rich-text-wrapper {
+  border-radius: 14px;
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+  background: rgba(11, 15, 25, 0.9);
+}
+
+.section-editor-root.light .rich-text-wrapper {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.rich-text-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-dark);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.btn-toolbar-tool {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-toolbar-tool:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.rich-textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.section-editor-root.light .rich-textarea {
+  color: #0f172a;
+}
+
+.field-footer-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  padding: 0 4px;
+}
+
+/* IMAGE UPLOAD DROPZONE */
+.image-upload-box {
+  border: 2px dashed var(--color-border-dark);
+  border-radius: 16px;
+  padding: 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.image-upload-box:hover {
+  border-color: #818cf8;
+  background: rgba(129, 140, 248, 0.05);
+}
+
+/* RIGHT LIVE PREVIEW CANVAS PANE */
+.editor-preview-card {
+  border-radius: 24px;
+  padding: 2rem;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #0f172a;
+  text-align: left;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-badge-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4f46e5;
+  background: #e0e7ff;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .editor-split-grid {
+    grid-template-columns: 1fr;
+  }
+}

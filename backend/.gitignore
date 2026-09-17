@@ -1,0 +1,10 @@
+# Node modules & build artifacts
+node_modules/
+dist/
+coverage/
+*.log
+
+# Environment variables (contain secrets)
+.env
+.env.*
+!.env.example

@@ -1,0 +1,118 @@
+/* Minimal SaaS Pill-Shaped Theme Toggle Switch */
+.theme-toggle-switch {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-family: inherit;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.theme-toggle-switch:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #818CF8);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.toggle-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--landing-card, rgba(17, 24, 39, 0.7));
+  border: 1px solid var(--landing-border, rgba(129, 140, 248, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  box-sizing: border-box;
+  transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.theme-toggle-switch:hover .toggle-track {
+  border-color: var(--landing-border-strong, rgba(129, 140, 248, 0.45));
+}
+
+[data-landing-theme="light"] .toggle-track,
+[data-dashboard-theme="light"] .toggle-track,
+.dashboard-root.light .toggle-track {
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+[data-landing-theme="light"] .theme-toggle-switch:hover .toggle-track,
+[data-dashboard-theme="light"] .theme-toggle-switch:hover .toggle-track,
+.dashboard-root.light .theme-toggle-switch:hover .toggle-track {
+  border-color: #94A3B8;
+}
+
+.toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  z-index: 1;
+  transition: opacity 200ms ease, color 200ms ease;
+}
+
+.toggle-icon svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.moon-icon {
+  color: #818CF8;
+  opacity: 0.9;
+}
+
+.sun-icon {
+  color: #F59E0B;
+  opacity: 0.4;
+}
+
+[data-landing-theme="light"] .moon-icon,
+[data-dashboard-theme="light"] .moon-icon,
+.dashboard-root.light .moon-icon {
+  opacity: 0.4;
+  color: #64748B;
+}
+
+[data-landing-theme="light"] .sun-icon,
+[data-dashboard-theme="light"] .sun-icon,
+.dashboard-root.light .sun-icon {
+  opacity: 1;
+  color: #D97706;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms ease, box-shadow 200ms ease;
+  z-index: 2;
+}
+
+.toggle-knob.dark {
+  transform: translateX(20px);
+  background: #6366F1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(99, 102, 241, 0.5);
+}
+
+.toggle-knob.light {
+  transform: translateX(0px);
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

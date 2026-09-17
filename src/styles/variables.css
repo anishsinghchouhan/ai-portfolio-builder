@@ -1,0 +1,147 @@
+/* AI Portfolio Builder - Design System CSS Variables */
+:root {
+  /* Colors — Brand */
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  --color-primary-active: #3730A3;
+  --color-primary-subtle: #EEF2FF;
+  --color-secondary: #0EA5E9;
+  --color-secondary-hover: #0284C7;
+
+  /* Colors — Semantic */
+  --color-success: #16A34A;
+  --color-success-subtle: #F0FDF4;
+  --color-danger: #DC2626;
+  --color-danger-subtle: #FEF2F2;
+  --color-warning: #D97706;
+  --color-warning-subtle: #FFFBEB;
+  --color-info: #2563EB;
+  --color-info-subtle: #EFF6FF;
+
+  /* Colors — Neutral / Surface */
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+
+  /* Colors — Text */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+
+  /* Colors — Interaction */
+  --color-hover-overlay: rgba(15, 23, 42, 0.04);
+  --color-active-overlay: rgba(15, 23, 42, 0.08);
+  --color-disabled-bg: #F1F5F9;
+  --color-disabled-text: #CBD5E1;
+  --color-focus-ring: #818CF8;
+
+  /* Dark Theme Tokens (Default active for app) */
+  --color-background-dark: #0B0F19;
+  --color-surface-dark: #111827;
+  --color-card-dark: #1A2233;
+  --color-border-dark: #2A3441;
+  --color-text-primary-dark: #F1F5F9;
+  --color-text-secondary-dark: #94A3B8;
+  --color-text-muted-dark: #64748B;
+  --color-primary-dark: #818CF8;
+  --color-success-dark: #4ADE80;
+  --color-danger-dark: #F87171;
+  --color-warning-dark: #FBBF24;
+  --color-info-dark: #60A5FA;
+
+  /* Landing Page Theme Tokens — Default Dark Mode */
+  --landing-bg: #0B0F19;
+  --landing-bg-secondary: #0F172A;
+  --landing-surface: #111827;
+  --landing-card: rgba(17, 24, 39, 0.7);
+  --landing-card-solid: #1A2233;
+  --landing-card-hover: rgba(26, 34, 51, 0.85);
+  --landing-border: rgba(129, 140, 248, 0.2);
+  --landing-border-strong: rgba(129, 140, 248, 0.45);
+  --landing-border-subtle: #2A3441;
+  --landing-text-primary: #F1F5F9;
+  --landing-text-secondary: #94A3B8;
+  --landing-text-muted: #64748B;
+  --landing-heading-gradient: linear-gradient(135deg, #ffffff 30%, #818cf8 70%, #0ea5e9 100%);
+  --landing-nav-bg: rgba(11, 15, 25, 0.78);
+  --landing-nav-scrolled: rgba(11, 15, 25, 0.92);
+  --landing-mobile-drawer-bg: rgba(11, 15, 25, 0.96);
+  --landing-footer-bg: #06080d;
+  --landing-input-bg: #0B0F19;
+  --landing-shadow-card: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --landing-glow-opacity: 0.15;
+
+  /* Typography */
+  --font-family-base: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --text-display: 3.5rem;
+  --text-h1: 2.25rem;
+  --text-h2: 1.875rem;
+  --text-h3: 1.5rem;
+  --text-h4: 1.25rem;
+  --text-h5: 1.125rem;
+  --text-h6: 1rem;
+  --text-body-lg: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+  --text-button: 0.9375rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 40px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 80px;
+  --space-10: 96px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 8px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-xl: 0 16px 40px rgba(15, 23, 42, 0.14);
+  --shadow-card: 0 2px 6px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-floating: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+  --shadow-dropdown: 0 8px 16px rgba(15, 23, 42, 0.10);
+}
+
+/* Landing Page Theme Tokens — Light Mode (Scoped specifically to data-landing-theme="light") */
+[data-landing-theme="light"] {
+  --landing-bg: #F8FAFC;
+  --landing-bg-secondary: #F1F5F9;
+  --landing-surface: #FFFFFF;
+  --landing-card: rgba(255, 255, 255, 0.85);
+  --landing-card-solid: #FFFFFF;
+  --landing-card-hover: #FFFFFF;
+  --landing-border: #E2E8F0;
+  --landing-border-strong: #CBD5E1;
+  --landing-border-subtle: #E2E8F0;
+  --landing-text-primary: #0F172A;
+  --landing-text-secondary: #475569;
+  --landing-text-muted: #64748B;
+  --landing-heading-gradient: linear-gradient(135deg, #0F172A 30%, #4F46E5 70%, #0EA5E9 100%);
+  --landing-nav-bg: rgba(255, 255, 255, 0.82);
+  --landing-nav-scrolled: rgba(255, 255, 255, 0.95);
+  --landing-mobile-drawer-bg: rgba(255, 255, 255, 0.98);
+  --landing-footer-bg: #F1F5F9;
+  --landing-input-bg: #FFFFFF;
+  --landing-shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --landing-glow-opacity: 0.08;
+}

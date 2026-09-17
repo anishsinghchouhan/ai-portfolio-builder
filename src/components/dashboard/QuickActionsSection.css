@@ -1,0 +1,216 @@
+/* Dedicated Quick Actions Section - Senior UX Design System */
+@import "../../styles/variables.css";
+
+.quick-actions-section-root {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.quick-actions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.quick-actions-title-group h2 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.quick-actions-title-group p {
+  font-size: var(--text-small);
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* 8 Large Action Cards Grid */
+.quick-actions-grid-8 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+/* Large Action Card Container */
+.large-action-card {
+  border-radius: 24px;
+  padding: 1.5rem;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 175px;
+}
+
+.large-action-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 20px 45px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Color Accent Variations on Hover */
+.large-action-card.indigo:hover {
+  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.cyan:hover {
+  background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.purple:hover {
+  background: radial-gradient(circle at top right, rgba(168, 85, 247, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.emerald:hover {
+  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.amber:hover {
+  background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.rose:hover {
+  background: radial-gradient(circle at top right, rgba(244, 63, 94, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.violet:hover {
+  background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+.large-action-card.blue:hover {
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.22), rgba(17, 24, 39, 0.85) 70%);
+}
+
+/* Card Top: Icon & Arrow Indicator */
+.action-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.action-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.large-action-card:hover .action-icon-badge {
+  transform: scale(1.08);
+}
+
+.action-icon-badge.indigo { background: linear-gradient(135deg, rgba(79, 70, 229, 0.35), rgba(99, 102, 241, 0.2)); color: #818cf8; }
+.action-icon-badge.cyan { background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(56, 189, 248, 0.2)); color: #38bdf8; }
+.action-icon-badge.purple { background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(192, 132, 252, 0.2)); color: #c084fc; }
+.action-icon-badge.emerald { background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(52, 211, 153, 0.2)); color: #34d399; }
+.action-icon-badge.amber { background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(251, 191, 36, 0.2)); color: #fbbf24; }
+.action-icon-badge.rose { background: linear-gradient(135deg, rgba(244, 63, 94, 0.35), rgba(251, 113, 133, 0.2)); color: #fb7185; }
+.action-icon-badge.violet { background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(167, 139, 250, 0.2)); color: #a78bfa; }
+.action-icon-badge.blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(96, 165, 250, 0.2)); color: #60a5fa; }
+
+.action-arrow-indicator {
+  color: #94a3b8;
+  transition: all 0.25s ease;
+}
+
+.large-action-card:hover .action-arrow-indicator {
+  color: #ffffff;
+  transform: translate(3px, -3px);
+}
+
+/* Card Body Text */
+.action-card-body h4 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.action-card-body p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Responsive Rules */
+@media (max-width: 1200px) {
+  .quick-actions-grid-8 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-actions-grid-8 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard Light Theme Overrides for Quick Actions */
+[data-dashboard-theme="light"] .quick-actions-title-group h2,
+.dashboard-root.light .quick-actions-title-group h2 {
+  color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .quick-actions-title-group p,
+.dashboard-root.light .quick-actions-title-group p {
+  color: #64748B;
+}
+
+[data-dashboard-theme="light"] .large-action-card,
+.dashboard-root.light .large-action-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+[data-dashboard-theme="light"] .large-action-card:hover,
+.dashboard-root.light .large-action-card:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  transform: translateY(-4px);
+}
+
+[data-dashboard-theme="light"] .action-card-body h4,
+.dashboard-root.light .action-card-body h4 {
+  color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .action-card-body p,
+.dashboard-root.light .action-card-body p {
+  color: #64748B;
+}
+
+[data-dashboard-theme="light"] .action-arrow-indicator,
+.dashboard-root.light .action-arrow-indicator {
+  color: #64748B;
+}
+
+[data-dashboard-theme="light"] .large-action-card:hover .action-arrow-indicator,
+.dashboard-root.light .large-action-card:hover .action-arrow-indicator {
+  color: #0F172A;
+}

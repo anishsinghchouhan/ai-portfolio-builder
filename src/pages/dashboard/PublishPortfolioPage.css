@@ -1,0 +1,321 @@
+/* Dedicated Publish Portfolio Page - Senior SaaS UI System */
+@import "../../styles/variables.css";
+
+.publish-page-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Roots */
+.publish-page-root.dark {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+.publish-page-root.light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Background Grids & Radial Glows */
+.publish-bg-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.publish-bg-glow {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 850px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, rgba(79, 70, 229, 0.06) 55%, transparent 80%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+/* Header Section */
+.publish-header-bar {
+  margin-bottom: 2rem;
+  text-align: left;
+  z-index: 10;
+}
+
+.publish-header-bar h1 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.publish-page-root.dark .publish-header-bar h1 { color: #ffffff; }
+.publish-page-root.light .publish-header-bar h1 { color: #0f172a; }
+
+.publish-header-bar p {
+  font-size: var(--text-small);
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* MAIN FORM GRID (URL & Domain Config + SEO Settings) */
+.publish-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  z-index: 10;
+  margin-bottom: 2rem;
+}
+
+.publish-card-box {
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-sizing: border-box;
+  text-align: left;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.publish-page-root.light .publish-card-box {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.publish-card-box h3 {
+  font-family: 'Plus Jakarta Sans', var(--font-family-base);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.publish-page-root.dark .publish-card-box h3 { color: #ffffff; }
+.publish-page-root.light .publish-card-box h3 { color: #0f172a; }
+
+.field-group-publish {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group-publish label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.publish-page-root.light .field-group-publish label {
+  color: #334155;
+}
+
+/* Slug Input Prefix Group */
+.slug-input-wrapper {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+}
+
+.publish-page-root.light .slug-input-wrapper {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.slug-prefix-text {
+  padding: 0 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  height: 44px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--color-border-dark);
+}
+
+.input-slug-field {
+  flex-grow: 1;
+  height: 44px;
+  border: none;
+  background: transparent;
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  outline: none;
+}
+
+.publish-page-root.light .input-slug-field {
+  color: #0f172a;
+}
+
+.input-text-publish {
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  outline: none;
+}
+
+.publish-page-root.light .input-text-publish {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.textarea-publish {
+  min-height: 90px;
+  border-radius: 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--color-border-dark);
+  padding: 12px 1rem;
+  font-size: 0.88rem;
+  color: #ffffff;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.publish-page-root.light .textarea-publish {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* DNS Records Table Box */
+.dns-records-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 14px;
+  padding: 1rem;
+  font-size: 0.8rem;
+}
+
+.dns-row-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--color-border-dark);
+}
+
+.dns-row-item:last-child {
+  border-bottom: none;
+}
+
+/* MAIN PUBLISH CTA BUTTON */
+.publish-cta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border-dark);
+  z-index: 10;
+}
+
+.btn-publish-now-huge {
+  height: 52px;
+  padding: 0 2.5rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.45);
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-publish-now-huge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.65);
+}
+
+/* SUCCESS MODAL OVERLAY */
+.publish-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1.5rem;
+}
+
+.publish-modal-card {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 28px;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+.modal-confetti-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.publish-modal-card h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.published-url-box {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 1.25rem 0 1.75rem 0;
+  word-break: break-all;
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+  .publish-grid-container {
+    grid-template-columns: 1fr;
+  }
+}
