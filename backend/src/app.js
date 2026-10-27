@@ -50,35 +50,42 @@ app.get("/health", (req, res) => {
 });
 
 // 4. Strict Whitelist CORS Configuration (Only allowed frontend URL from .env)
-const allowedOrigins = [env.CORS_ORIGIN].filter(Boolean);
+
+
+const allowedOrigins = [env.CORS_ORIGIN]
+  .filter(Boolean)
+  .map((origin) => origin.trim().replace(/\/$/, ""));
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In local development, permit non-browser requests (e.g. curl, Postman, test scripts)
+      // Allow requests without Origin (health checks, curl, server-to-server).
+      // These requests still need normal authentication/authorization.
       if (!origin) {
-        if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
-          return callback(null, true);
-        }
-        return callback(
-          new AppError("CORS Blocked: Origin header is missing.", 403, "CORS_FORBIDDEN")
-        );
+        return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      const normalizedOrigin = origin.trim().replace(/\/$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
       return callback(
-        new AppError(`CORS Blocked: Origin '${origin}' is not authorized.`, 403, "CORS_FORBIDDEN")
+        new AppError(
+          `CORS Blocked: Origin '${origin}' is not authorized.`,
+          403,
+          "CORS_FORBIDDEN"
+        )
       );
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 86400, // 24-hour preflight cache
+    maxAge: 86400,
   })
 );
+
 
 // 5. Body Parsers with 1MB payload limits (prevents payload bloat / DoS)
 app.use(express.json({ limit: "1mb" }));
