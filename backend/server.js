@@ -11,15 +11,15 @@ const server = app.listen(PORT, () => {
 
 // Process Rejection Handlers
 process.on("unhandledRejection", (err) => {
-  logger.error("💥 UNHANDLED REJECTION! Shutting down gracefully...");
-  logger.error(err.name, err.message);
+  logger.error(`💥 UNHANDLED REJECTION: ${err.name} - ${err.message}`);
+  if (err.stack) logger.error(err.stack);
   server.close(() => {
     process.exit(1);
   });
 });
 
 process.on("uncaughtException", (err) => {
-  logger.error("💥 UNCAUGHT EXCEPTION! Shutting down gracefully...");
-  logger.error(err.name, err.message);
+  logger.error(`💥 UNCAUGHT EXCEPTION: ${err.name} - ${err.message}`);
+  if (err.stack) logger.error(err.stack);
   process.exit(1);
 });

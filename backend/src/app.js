@@ -2,75 +2,107 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import cookieParser from "cookie-parser";
 import env from "./config/env.js";
+import AppError from "./utils/AppError.js";
 import globalErrorHandler from "./middleware/errorHandler.js";
 import notFoundHandler from "./middleware/notFoundHandler.js";
+import { globalLimiter, authLimiter } from "./middleware/rateLimiter.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import portfolioRoutes from "./routes/portfolioRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 const app = express();
 
-// Security HTTP Headers
-app.use(helmet());
+// 1. Trust proxy for rate limiting behind reverse proxies (Render, Railway, Vercel, Nginx)
+app.set("trust proxy", 1);
 
-// CORS configuration
+// 2. Enhanced Helmet Security Headers
 app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", env.CORS_ORIGIN, "https://*.supabase.co"],
+        imgSrc: ["'self'", "data:", "https:"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
   })
 );
 
-// Body Parsers & Cookie Parser
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(cookieParser());
+// 3. Health Check Endpoint (Placed BEFORE CORS so monitoring/probes are never blocked)
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "AI Portfolio Builder API Server Operating Normally",
+    environment: env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+  });
+});
 
-// HTTP Request Logging
+// 4. Strict Whitelist CORS Configuration (Only allowed frontend URL from .env)
+const allowedOrigins = [env.CORS_ORIGIN].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // In local development, permit non-browser requests (e.g. curl, Postman, test scripts)
+      if (!origin) {
+        if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
+          return callback(null, true);
+        }
+        return callback(
+          new AppError("CORS Blocked: Origin header is missing.", 403, "CORS_FORBIDDEN")
+        );
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new AppError(`CORS Blocked: Origin '${origin}' is not authorized.`, 403, "CORS_FORBIDDEN")
+      );
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400, // 24-hour preflight cache
+  })
+);
+
+// 5. Body Parsers with 1MB payload limits (prevents payload bloat / DoS)
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// 6. Request Logging in development
 if (env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-import prisma from "./config/prisma.js";
+// 7. Global API Rate Limiter (300 requests per 15 minutes)
+app.use("/api", globalLimiter);
 
-// Health Check Endpoint
-app.get("/health", async (req, res) => {
-  let dbStatus = "UNKNOWN";
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    dbStatus = "CONNECTED";
-  } catch (err) {
-    dbStatus = "DISCONNECTED";
-  }
-
-  res.status(200).json({
-    success: true,
-    statusCode: 200,
-    message: "AI Portfolio Builder API Server Operating Normally",
-    data: {
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      environment: env.NODE_ENV,
-      database: dbStatus,
-    },
-  });
-});
-
-// API v1 Routes
-app.use("/api/v1/auth", authRoutes);
+// 8. API v1 Routes (Auth routes guarded with strict authLimiter: 10 per 15 min)
+app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/portfolios", portfolioRoutes);
 app.use("/api/v1/public", publicRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
 
-// 404 Route Not Found Middleware
+// 9. 404 Route Not Found Middleware
 app.use(notFoundHandler);
 
-// Global Error Handler Middleware
+// 10. Global Central Error Handler Middleware
 app.use(globalErrorHandler);
 
 export default app;

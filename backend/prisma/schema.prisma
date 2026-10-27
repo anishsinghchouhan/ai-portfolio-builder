@@ -26,6 +26,13 @@ model User {
   supabaseUserId String      @unique
   email          String      @unique
   fullName       String?
+  headline       String?
+  bio            String?
+  location       String?
+  phone          String?
+  github         String?
+  linkedin       String?
+  website        String?
   avatarUrl      String?
   role           Role        @default(USER)
   createdAt      DateTime    @default(now())

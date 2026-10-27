@@ -1,72 +1,156 @@
+import { z } from "zod";
 import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
 
+// Helper for validating optional HTTP/HTTPS URL or null/empty
+const optionalUrlSchema = (fieldName, maxLength = 255) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength, `${fieldName} cannot exceed ${maxLength} characters`)
+    .refine(
+      (val) => !val || /^https?:\/\/.+/i.test(val),
+      `${fieldName} must be a valid URL starting with http:// or https://`
+    )
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .optional();
+
+// Helper for optional trimmed strings with max length or null/empty
+const optionalStringSchema = (fieldName, maxLength) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength, `${fieldName} cannot exceed ${maxLength} characters`)
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .optional();
+
+/**
+ * Zod schema for updating user profile.
+ * .strict() ensures ANY unknown or forbidden fields (id, email, role, supabaseUserId, etc.) are rejected with 400.
+ */
+const updateProfileSchema = z
+  .object({
+    fullName: optionalStringSchema("Full Name", 100),
+    headline: optionalStringSchema("Headline", 150),
+    bio: optionalStringSchema("Bio", 1000),
+    location: optionalStringSchema("Location", 100),
+    phone: optionalStringSchema("Phone", 30),
+    github: optionalUrlSchema("GitHub", 255),
+    linkedin: optionalUrlSchema("LinkedIn", 255),
+    website: optionalUrlSchema("Website", 255),
+    avatarUrl: optionalUrlSchema("Avatar URL", 1000),
+  })
+  .strict({ message: "Unknown fields are not allowed in profile update." });
+
 /**
  * GET /api/v1/users/me
- * Returns authenticated user's profile from Prisma DB
+ * Returns authenticated user's profile from Prisma DB (matching logged-in supabaseUserId)
  */
 export const getMe = catchAsync(async (req, res, next) => {
-  if (!req.user) {
+  const supabaseUserId = req.auth?.supabaseUserId || req.user?.supabaseUserId;
+  if (!supabaseUserId) {
     return next(new AppError("User identity missing.", 401, "UNAUTHORIZED"));
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { supabaseUserId },
+    select: {
+      id: true,
+      supabaseUserId: true,
+      email: true,
+      fullName: true,
+      headline: true,
+      bio: true,
+      location: true,
+      phone: true,
+      github: true,
+      linkedin: true,
+      website: true,
+      avatarUrl: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!user) {
+    return next(new AppError("User profile not found in database.", 404, "NOT_FOUND"));
   }
 
   res.status(200).json({
     success: true,
-    data: {
-      id: req.user.id,
-      supabaseUserId: req.user.supabaseUserId,
-      email: req.user.email,
-      fullName: req.user.fullName,
-      avatarUrl: req.user.avatarUrl,
-      role: req.user.role,
-      createdAt: req.user.createdAt,
-      updatedAt: req.user.updatedAt,
-    },
+    data: user,
   });
 });
 
 /**
  * PATCH /api/v1/users/me
- * Updates allowed profile fields (fullName, avatarUrl)
+ * Updates allowed profile fields with strict Zod validation.
+ * Targets ONLY the row where supabaseUserId equals the logged-in user.
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  if (!req.user) {
+  const supabaseUserId = req.auth?.supabaseUserId || req.user?.supabaseUserId;
+  if (!supabaseUserId) {
     return next(new AppError("User identity missing.", 401, "UNAUTHORIZED"));
   }
 
-  const { fullName, avatarUrl } = req.body;
+  // Parse and validate with strict Zod schema (.strict() automatically rejects id, email, role, supabaseUserId, etc.)
+  const parseResult = updateProfileSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    const errorMessages = parseResult.error.errors
+      .map((e) => {
+        const field = e.path.join(".");
+        return field ? `${field}: ${e.message}` : e.message;
+      })
+      .join("; ");
 
-  // Validate input
-  if (fullName !== undefined && typeof fullName !== "string") {
-    return next(new AppError("Invalid fullName format.", 400, "BAD_REQUEST"));
+    return next(new AppError(errorMessages, 400, "VALIDATION_ERROR", parseResult.error.format()));
   }
 
-  if (avatarUrl !== undefined && avatarUrl !== null && typeof avatarUrl !== "string") {
-    return next(new AppError("Invalid avatarUrl format.", 400, "BAD_REQUEST"));
+  const validatedData = parseResult.data;
+
+  // Filter out undefined keys so we only update provided fields
+  const dataToUpdate = {};
+  for (const [key, val] of Object.entries(validatedData)) {
+    if (val !== undefined) {
+      dataToUpdate[key] = val;
+    }
   }
 
+  if (Object.keys(dataToUpdate).length === 0) {
+    return next(new AppError("No valid profile fields provided for update.", 400, "BAD_REQUEST"));
+  }
+
+  // Update only the row where supabaseUserId equals the logged-in user
   const updatedUser = await prisma.user.update({
-    where: { id: req.user.id },
-    data: {
-      ...(fullName !== undefined && { fullName: fullName.trim() }),
-      ...(avatarUrl !== undefined && { avatarUrl }),
+    where: { supabaseUserId },
+    data: dataToUpdate,
+    select: {
+      id: true,
+      supabaseUserId: true,
+      email: true,
+      fullName: true,
+      headline: true,
+      bio: true,
+      location: true,
+      phone: true,
+      github: true,
+      linkedin: true,
+      website: true,
+      avatarUrl: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
   res.status(200).json({
     success: true,
     message: "Profile updated successfully",
-    data: {
-      id: updatedUser.id,
-      supabaseUserId: updatedUser.supabaseUserId,
-      email: updatedUser.email,
-      fullName: updatedUser.fullName,
-      avatarUrl: updatedUser.avatarUrl,
-      role: updatedUser.role,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
-    },
+    data: updatedUser,
   });
 });
 

@@ -2,6 +2,36 @@ import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
 
+export const RESERVED_SLUGS = [
+  "login",
+  "signup",
+  "dashboard",
+  "admin",
+  "api",
+  "pricing",
+  "templates",
+  "settings",
+  "profile",
+  "forgot-password",
+  "reset-password",
+  "auth",
+  "home",
+  "landing",
+  "upload",
+  "builder",
+  "themes",
+  "publish",
+  "analytics",
+  "terms",
+  "privacy",
+  "refund-policy",
+  "contact",
+  "about",
+  "help",
+  "blog",
+  "billing",
+];
+
 // Helper to ensure dbUser is retrieved
 const getDbUser = (req) => {
   if (req.user && req.user.id) {
@@ -22,8 +52,10 @@ const generateUniqueSlug = async (title) => {
   let count = 0;
 
   while (count < 5) {
-    const existing = await prisma.portfolio.findUnique({ where: { slug } });
-    if (!existing) break;
+    if (!RESERVED_SLUGS.includes(slug)) {
+      const existing = await prisma.portfolio.findUnique({ where: { slug } });
+      if (!existing) break;
+    }
     slug = `${baseSlug}-${Math.random().toString(36).substring(2, 7)}`;
     count++;
   }
@@ -96,6 +128,17 @@ export const createPortfolio = catchAsync(async (req, res, next) => {
 
   const dbUser = getDbUser(req);
   let slug = customSlug;
+
+  if (slug) {
+    const cleanSlug = slug.toLowerCase().trim();
+    if (RESERVED_SLUGS.includes(cleanSlug)) {
+      return next(new AppError(`The slug '${cleanSlug}' is a reserved system URL and cannot be used.`, 400, "BAD_REQUEST"));
+    }
+    if (!/^[a-z0-9-]+$/.test(cleanSlug)) {
+      return next(new AppError("Portfolio slug can only contain lowercase letters, numbers, and hyphens.", 400, "BAD_REQUEST"));
+    }
+    slug = cleanSlug;
+  }
 
   if (!slug) {
     slug = await generateUniqueSlug(title);
