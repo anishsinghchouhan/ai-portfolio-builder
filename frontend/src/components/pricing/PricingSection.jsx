@@ -9,7 +9,7 @@ export const PricingSection = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handlePlanClick = (planType) => {
+  const handlePlanClick = () => {
     if (isAuthenticated) {
       navigate(ROUTES.DASHBOARD);
     } else {

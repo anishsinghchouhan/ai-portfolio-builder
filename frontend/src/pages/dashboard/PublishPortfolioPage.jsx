@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import { triggerDashboardRefresh } from "../../hooks/useDashboardSummary";
 import "./PublishPortfolioPage.css";
 
-export const PublishPortfolioPage = ({ portfolioId: propId, onBack }) => {
-  const { portfolioId: paramId } = useParams();
-  const portfolioId = propId || paramId;
-  const navigate = useNavigate();
+export const PublishPortfolioPage = () => {
   const { theme } = useDashboardTheme();
   const [customSlug, setCustomSlug] = useState("alex-morgan-tech");
   const [customDomain, setCustomDomain] = useState("alexmorgan.dev");
@@ -16,10 +12,6 @@ export const PublishPortfolioPage = ({ portfolioId: propId, onBack }) => {
     "Senior Full-Stack Engineer specializing in React, Node.js, and Distributed AI Systems. Explore portfolio projects and resume."
   );
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
 
   const handlePublishClick = () => {
     triggerDashboardRefresh();
