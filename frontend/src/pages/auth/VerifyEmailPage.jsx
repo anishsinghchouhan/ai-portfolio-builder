@@ -18,7 +18,7 @@ export const VerifyEmailPage = ({ onBackToLogin }) => {
       setEmail(pendingVerificationEmail);
       setNewEmail(pendingVerificationEmail);
     }
-  }, [pendingVerificationEmail]);
+  }, [pendingVerificationEmail, email]);
 
   // 60-Second Countdown Timer Effect
   useEffect(() => {
