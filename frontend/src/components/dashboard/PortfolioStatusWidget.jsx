@@ -1,11 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import "./PortfolioStatusWidget.css";
 
+const ALL_READINESS_CHECKS = [
+  { key: "personal_info", label: "Candidate Profile & Bio", desc: "Full name, contact details, and location filled in profile settings." },
+  { key: "skills_added", label: "Technical Skills Stack", desc: "At least 3 core engineering languages, frameworks, or tools specified." },
+  { key: "projects_added", label: "Featured Projects", desc: "At least 1 showcased project with description, live demo or code repository." },
+  { key: "theme_chosen", label: "Custom Theme Styling", desc: "Theme configuration customized in Theme Studio (colors, typography, presets)." },
+  { key: "resume_linked", label: "Resume Attachment", desc: "A current PDF resume uploaded or attached for recruiters to download." },
+  { key: "portfolio_published", label: "Live Deployment", desc: "Portfolio published live to a public URL with SSL certificate active." },
+];
+
 export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
   const { theme } = useDashboardTheme();
   const navigate = useNavigate();
+  const [isHowCalculatedOpen, setIsHowCalculatedOpen] = useState(false);
 
   const percent = Number.isFinite(readiness?.percent) ? Math.max(0, Math.min(100, readiness.percent)) : 0;
   const completedSections = Array.isArray(readiness?.completed) ? readiness.completed : [];
@@ -50,7 +60,7 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
 
   const getStatusBadge = () => {
     if (percent === 100) {
-      return <span className="readiness-pill-badge status-ready">🟢 100% Complete</span>;
+      return <span className="readiness-pill-badge status-ready">🟢 100% Ready</span>;
     }
     if (percent > 0) {
       return <span className="readiness-pill-badge status-progress">🟡 {percent.toLocaleString()}% In Progress</span>;
@@ -58,24 +68,65 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
     return <span className="readiness-pill-badge status-setup">⚪ 0% Setup Required</span>;
   };
 
+  const isCheckCompleted = (key) => completedSections.some((item) => (typeof item === "string" ? item === key : item?.key === key));
+
   return (
     <div className={`portfolio-status-widget-root ${theme}`}>
       {/* Top Bar Header */}
       <div className="status-widget-top-bar">
         <div className="status-widget-title">
           <h3>Portfolio Readiness Status</h3>
-          <p>Real-time audit of candidate profile strength and SSL deployment readiness.</p>
+          <p>Real-time audit of candidate profile strength and deployment readiness.</p>
         </div>
 
-        {getStatusBadge()}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          {getStatusBadge()}
+          <button
+            type="button"
+            className="btn-how-calculated-toggle"
+            onClick={() => setIsHowCalculatedOpen((prev) => !prev)}
+            aria-expanded={isHowCalculatedOpen}
+            aria-controls="readiness-breakdown-details"
+          >
+            <span>{isHowCalculatedOpen ? "Hide Breakdown" : "How is this calculated?"}</span>
+            <span style={{ fontSize: "0.75rem" }}>{isHowCalculatedOpen ? "▲" : "▼"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* "How is this calculated?" Disclosure Accordion */}
+      {isHowCalculatedOpen && (
+        <div id="readiness-breakdown-details" className="readiness-breakdown-panel" role="region" aria-label="Readiness criteria calculation details">
+          <div className="breakdown-header">
+            <h4>Readiness Scoring Methodology</h4>
+            <p>
+              Your readiness score is calculated evenly across 6 core candidate criteria (approximately 16.7% per check).
+            </p>
+          </div>
+          <div className="breakdown-checks-grid">
+            {ALL_READINESS_CHECKS.map((check) => {
+              const done = isCheckCompleted(check.key);
+              return (
+                <div key={check.key} className={`breakdown-check-card ${done ? "completed" : "pending"}`}>
+                  <div className="check-card-header">
+                    <span className="check-icon">{done ? "✓" : "○"}</span>
+                    <strong className="check-title">{check.label}</strong>
+                    <span className="check-badge">{done ? "Done (+16.7%)" : "Pending"}</span>
+                  </div>
+                  <p className="check-desc">{check.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Main Grid: Circular Progress Ring & Checklist */}
       <div className="status-widget-grid">
-        {/* Left Box: SVG Circular Progress Ring */}
+        {/* Left Box: SVG Circular Progress Ring with no cut-off padding */}
         <div className="progress-ring-container">
           <div className="ring-svg-wrapper">
-            <svg viewBox="0 0 160 160">
+            <svg viewBox="0 0 180 180" className="readiness-progress-svg" aria-hidden="true">
               <defs>
                 <linearGradient id="statusRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#4f46e5" />
@@ -84,14 +135,14 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
                 </linearGradient>
               </defs>
 
-              {/* Background Track */}
-              <circle className="ring-bg-track" cx="80" cy="80" r="70" />
+              {/* Background Track - Center 90, 90, Radius 70 inside 180x180 box */}
+              <circle className="ring-bg-track" cx="90" cy="90" r="70" />
 
               {/* Filled Animated Progress Stroke */}
               <circle
                 className="ring-fill-progress"
-                cx="80"
-                cy="80"
+                cx="90"
+                cy="90"
                 r="70"
                 style={{ strokeDashoffset }}
               />
@@ -172,10 +223,10 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
           {/* Dynamic Suggestion Banner inside Widget */}
           <div className="widget-ai-suggestion-box">
             <div>
-              <strong>✨ Recommendation:</strong>{" "}
+              <strong>💡 Next Step:</strong>{" "}
               {missingSections.length > 0
                 ? `${missingSections[0].label}. Click above to complete it.`
-                : "Your portfolio is fully populated and ready for review."}
+                : "Your portfolio is fully populated and ready for recruiter review."}
             </div>
           </div>
         </div>
@@ -185,7 +236,7 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
       <div className="status-widget-footer">
         <div style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
           Live Domain:{" "}
-          {portfolio?.isPublished && portfolio?.slug ? (
+          {portfolio?.status === "PUBLISHED" && portfolio?.slug ? (
             <a
               href={`/${portfolio.slug}`}
               target="_blank"
@@ -199,16 +250,13 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
           )}
         </div>
 
-        {/* Hide Publish button when there is no portfolio */}
-        {portfolio ? (
-          <button type="button" className="btn-publish-main" onClick={handlePublishClick}>
-            <span>{portfolio.isPublished ? "Update Publication" : "Publish Portfolio"}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </button>
-        ) : null}
+        <button type="button" className="btn-publish-main" onClick={handlePublishClick}>
+          <span>{portfolio?.status === "PUBLISHED" ? "Update Publication" : "Publish Portfolio"}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </button>
       </div>
     </div>
   );

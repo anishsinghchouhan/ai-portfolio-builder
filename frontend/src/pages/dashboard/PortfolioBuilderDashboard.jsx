@@ -298,6 +298,25 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
         </div>
       </header>
 
+      {actionError && (
+        <div
+          role="alert"
+          style={{
+            background: "rgba(239, 68, 68, 0.15)",
+            borderBottom: "1px solid rgba(239, 68, 68, 0.3)",
+            color: "#fca5a5",
+            padding: "8px 24px",
+            fontSize: "0.85rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <span>⚠️</span>
+          <span>{actionError}</span>
+        </div>
+      )}
+
       {/* Main Workspace (Sidebar + Canvas Preview) */}
       <div className="builder-main-workspace">
         {/* Sections Control Sidebar */}

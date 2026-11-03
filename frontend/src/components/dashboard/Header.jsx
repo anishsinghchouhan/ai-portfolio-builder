@@ -12,6 +12,8 @@ export const Header = ({
   onThemeToggle,
   onOpenNotifications,
   onLogout,
+  isMobileOpen = false,
+  onToggleMobileMenu,
 }) => {
   const { theme, toggleTheme } = useDashboardTheme();
   const { user, appUser, logout } = useAuth();
@@ -87,8 +89,31 @@ export const Header = ({
 
   return (
     <header className="header-root">
-      {/* LEFT SECTION: Clean Breadcrumb Navigation */}
+      {/* LEFT SECTION: Mobile Toggle & Breadcrumb Navigation */}
       <div className="header-left-group">
+        <button
+          type="button"
+          className="btn-mobile-menu-toggle"
+          onClick={onToggleMobileMenu}
+          aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isMobileOpen}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            {isMobileOpen ? (
+              <>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </>
+            ) : (
+              <>
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </>
+            )}
+          </svg>
+        </button>
+
         <nav className="header-breadcrumb" aria-label="Breadcrumb">
           {breadcrumbPath.map((item, idx) => (
             <React.Fragment key={idx}>
