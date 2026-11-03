@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import "./ResumeAnalysisOverviewPage.css";
 
-export const ResumeAnalysisOverviewPage = ({ onContinueAudit, onBack }) => {
+export const ResumeAnalysisOverviewPage = ({ onContinueAudit, onBack: _onBack }) => {
   const { theme, toggleTheme } = useDashboardTheme();
 
   const missingInfoList = [
@@ -73,8 +73,30 @@ export const ResumeAnalysisOverviewPage = ({ onContinueAudit, onBack }) => {
       <div className="analysis-header-bar">
         <h1>AI Resume Audit Overview</h1>
         <p>
-          Deep neural network analysis of <strong>Alex_Morgan_Senior_FullStack_Resume.pdf</strong> against 10,000+ top technical resumes.
+          AI-assisted resume analysis against technical standards and ATS benchmarks.
         </p>
+      </div>
+
+      {/* Round 2 Preview Disclaimer Banner */}
+      <div
+        role="status"
+        style={{
+          background: "rgba(99, 102, 241, 0.12)",
+          border: "1px solid rgba(99, 102, 241, 0.35)",
+          color: "#c7d2fe",
+          padding: "12px 18px",
+          borderRadius: "12px",
+          marginBottom: "1.5rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          fontSize: "0.9rem",
+        }}
+      >
+        <span style={{ fontSize: "1.25rem" }}>ℹ️</span>
+        <div>
+          <strong style={{ color: "#ffffff" }}>Preview — not connected yet:</strong> Automated AI deep resume scoring and LLM audits are scheduled for Round 2. The items shown below represent sample evaluation criteria.
+        </div>
       </div>
 
       {/* 3 Metrics Cards Top Grid */}
