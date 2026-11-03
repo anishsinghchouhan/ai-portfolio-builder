@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getPortfolioById, publishPortfolio } from "../../services/portfolioService";
+import { ROUTES } from "../../constants/routes";
 import "./PortfolioPreviewPage.css";
 
 export const PortfolioPreviewPage = ({ portfolioId, onPublish, onShare, onBack }) => {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState("dark");
   const [deviceMode, setDeviceMode] = useState("desktop"); // "desktop" | "tablet" | "mobile"
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -123,7 +126,7 @@ export const PortfolioPreviewPage = ({ portfolioId, onPublish, onShare, onBack }
             className="btn-publish-portfolio"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
           >
             ← Return to Dashboard
@@ -137,10 +140,10 @@ export const PortfolioPreviewPage = ({ portfolioId, onPublish, onShare, onBack }
   const pPersonal = pContent.personal || {};
   const tc = pContent.themeConfig || {};
 
-  const candidateName = pPersonal.name || portfolio.user?.fullName || "Alex Morgan";
-  const candidateRole = pPersonal.headline || "Senior Full-Stack Engineer";
-  const candidateBio = pPersonal.bio || pContent.about?.description || "Building scalable SaaS applications & AI-driven user interfaces.";
-  const skillsList = pContent.skills || ["React", "TypeScript", "Node.js", "Express", "Prisma", "PostgreSQL"];
+  const candidateName = pPersonal.name || portfolio.user?.fullName || "Your Name";
+  const candidateRole = pPersonal.headline || portfolio.user?.headline || "Your Professional Title";
+  const candidateBio = pPersonal.bio || pContent.about?.description || "";
+  const skillsList = pContent.skills || [];
 
   const primaryColor = tc.primaryColor || "#4f46e5";
   const secondaryColor = tc.secondaryColor || "#0ea5e9";
@@ -157,7 +160,7 @@ export const PortfolioPreviewPage = ({ portfolioId, onPublish, onShare, onBack }
             type="button"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
             style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1rem", marginRight: "8px" }}
             title="Back"

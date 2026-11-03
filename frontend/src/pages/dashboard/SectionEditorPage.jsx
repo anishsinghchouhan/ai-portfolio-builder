@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getPortfolioById, updatePortfolio } from "../../services/portfolioService";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
+import { ROUTES, getBuilderPath } from "../../constants/routes";
 import "./SectionEditorPage.css";
 
 export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
+  const navigate = useNavigate();
   const { theme } = useDashboardTheme();
   const [activeTab, setActiveTab] = useState("about"); // "about" | "skills" | "experience" | "projects" | "education" | "certifications" | "contact"
   const [isSaving, setIsSaving] = useState(false);
@@ -51,18 +54,18 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
           const p = c.personal || {};
 
           setFormData({
-            name: p.name || fetchedPortfolio.user?.fullName || "Alex Morgan",
-            role: p.headline || "Senior Full-Stack Engineer & AI Systems Architect",
-            location: p.location || "San Francisco, CA • Remote Available",
-            aboutText: p.bio || c.about?.description || "Senior Full-Stack Engineer with 6+ years of experience designing scalable microservices.",
-            skillsList: Array.isArray(c.skills) ? c.skills.join(", ") : (c.skillsList || "React, TypeScript, Node.js, Next.js, Python, PostgreSQL, Prisma"),
-            experienceTitle: c.experience?.[0]?.title || "Senior Software Engineer — TechScale Inc.",
-            experienceBullets: c.experience?.[0]?.description || "• Architected real-time WebSocket engine.\n• Optimized LCP performance by 42%.",
-            projectTitle: c.projects?.[0]?.title || "AI Portfolio Builder SaaS Platform",
-            projectUrl: c.projects?.[0]?.liveUrl || "https://portfolio.ai/alex-morgan",
-            certName: c.certifications?.[0] || "AWS Certified Solutions Architect & GCP Cloud Engineer",
-            contactEmail: p.email || fetchedPortfolio.user?.email || "alex.morgan@email.com",
-            avatarUrl: p.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+            name: p.name || fetchedPortfolio.user?.fullName || "",
+            role: p.headline || fetchedPortfolio.user?.headline || "",
+            location: p.location || fetchedPortfolio.user?.location || "",
+            aboutText: p.bio || c.about?.description || fetchedPortfolio.user?.bio || "",
+            skillsList: Array.isArray(c.skills) ? c.skills.join(", ") : (c.skillsList || ""),
+            experienceTitle: c.experience?.[0]?.title || "",
+            experienceBullets: c.experience?.[0]?.description || "",
+            projectTitle: c.projects?.[0]?.title || "",
+            projectUrl: c.projects?.[0]?.liveUrl || "",
+            certName: c.certifications?.[0] || "",
+            contactEmail: p.email || fetchedPortfolio.user?.email || "",
+            avatarUrl: p.avatarUrl || fetchedPortfolio.user?.avatarUrl || "",
           });
         }
       } catch (err) {
@@ -174,7 +177,7 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
             className="btn-save-section"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
           >
             ← Return to Dashboard
@@ -194,7 +197,7 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
               type="button"
               onClick={() => {
                 if (onBack) onBack();
-                else window.location.hash = `portfolio-builder?id=${portfolioId}`;
+                else navigate(getBuilderPath(portfolioId));
               }}
               style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1rem" }}
               title="Back"

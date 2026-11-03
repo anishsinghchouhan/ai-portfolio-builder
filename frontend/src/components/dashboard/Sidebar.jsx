@@ -21,8 +21,7 @@ export const Sidebar = ({
   const { user, appUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  const userName = user?.user_metadata?.full_name || appUser?.name || user?.email?.split("@")[0] || "User";
-  const userPlan = (appUser?.plan || "Free").toUpperCase();
+  const userName = user?.user_metadata?.full_name || appUser?.fullName || user?.email?.split("@")[0] || "User";
   const avatarUrl = user?.user_metadata?.avatar_url || appUser?.avatarUrl;
   const userInitials = userName
     .split(" ")
@@ -113,8 +112,8 @@ export const Sidebar = ({
         {
           id: "billing",
           label: "Billing",
-          badge: userPlan,
-          badgeType: userPlan === "PRO" ? "pro" : "neutral",
+          badge: "Coming soon",
+          badgeType: "neutral",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -265,7 +264,7 @@ export const Sidebar = ({
         )}
         <div className="user-text-info">
           <span className="user-name-text" title={userName}>{userName}</span>
-          <span className="user-role-text">{userPlan === "PRO" ? "Pro Plan" : "Free Plan"}</span>
+          <span className="user-role-text">{appUser?.role || "Member"}</span>
         </div>
       </div>
     </aside>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getPortfolioById, updatePortfolio, publishPortfolio } from "../../services/portfolioService";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
+import { ROUTES, getThemesPath, getPublishPath } from "../../constants/routes";
 import "./PortfolioBuilderDashboard.css";
 
 export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSaveDraft, onBack }) => {
+  const navigate = useNavigate();
   const { portfolioId: paramId } = useParams();
   const portfolioId = propId || paramId;
   const { theme } = useDashboardTheme();
@@ -138,19 +140,22 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
     }
   };
 
+  const [actionError, setActionError] = useState(null);
+
   const handlePublishClick = async () => {
     if (!portfolioId || isSaving) return;
     setIsSaving(true);
     setSaveStatus("Publishing...");
+    setActionError(null);
 
     try {
       await publishPortfolio(portfolioId);
-      setSaveStatus("Saved");
+      setSaveStatus("Published!");
       if (onPublish) onPublish();
-      else alert("Portfolio published live!");
+      else navigate(getPublishPath(portfolioId));
     } catch (err) {
       setSaveStatus("Save failed");
-      alert(`Publish failed: ${err.message}`);
+      setActionError(err.response?.data?.error?.message || err.message || "Failed to publish portfolio.");
     } finally {
       setIsSaving(false);
     }
@@ -182,7 +187,7 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
             className="btn-publish-live"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
           >
             ← Return to Dashboard
@@ -193,8 +198,8 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
   }
 
   const personalInfo = portfolio.content?.personal || {};
-  const candidateName = personalInfo.name || "Alex Morgan";
-  const candidateHeadline = personalInfo.headline || "Senior Full-Stack Engineer";
+  const candidateName = personalInfo.name || portfolio.user?.fullName || "Your Name";
+  const candidateHeadline = personalInfo.headline || portfolio.user?.headline || "Your Professional Title";
 
   return (
     <div className={`builder-root ${theme}`}>
@@ -205,7 +210,7 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
             type="button"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
             style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1rem", marginRight: "8px" }}
             title="Back to Dashboard"
@@ -303,14 +308,11 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
               type="button"
               className="btn-add-section"
               onClick={() => {
-                if (window.location.hash.includes("id=")) {
-                  window.location.hash = `#section-editor?id=${portfolioId}`;
-                } else {
-                  window.location.hash = "section-editor";
-                }
+                navigate(getThemesPath(portfolioId));
               }}
+              title="Customize Themes and Styles"
             >
-              ✏️ Content Editor
+              🎨 Theme Studio
             </button>
           </div>
 

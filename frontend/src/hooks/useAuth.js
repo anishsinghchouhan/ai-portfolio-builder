@@ -31,12 +31,18 @@ export const syncBackendUser = async (user) => {
     .get("/users/me")
     .then((res) => {
       if (res.data?.data) {
-        authStore.setState({ appUser: res.data.data });
+        authStore.setState({ appUser: res.data.data, syncError: null });
         return res.data.data;
       }
       return null;
     })
     .catch((err) => {
+      const errorMsg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        err.message ||
+        "Could not load account details. Please check your network.";
+      authStore.setState({ syncError: errorMsg });
       if (import.meta.env.DEV) {
         console.warn("Backend user sync notice:", err.message);
       }

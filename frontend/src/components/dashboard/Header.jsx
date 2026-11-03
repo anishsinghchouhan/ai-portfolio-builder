@@ -27,10 +27,9 @@ export const Header = ({
   const messagesRef = useRef(null);
 
   // Real user display metadata
-  const userName = user?.user_metadata?.full_name || appUser?.name || user?.email?.split("@")[0] || "User";
+  const userName = user?.user_metadata?.full_name || appUser?.fullName || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
   const avatarUrl = user?.user_metadata?.avatar_url || appUser?.avatarUrl || null;
-  const userPlan = (appUser?.plan || "Free").toUpperCase();
   const userInitials = userName
     .split(" ")
     .filter(Boolean)
@@ -252,12 +251,7 @@ export const Header = ({
           {isProfileOpen && (
             <div className="header-dropdown-menu">
               <div className="dropdown-user-header">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
-                  <h5 style={{ margin: 0 }}>{userName}</h5>
-                  <span style={{ fontSize: "0.68rem", padding: "2px 6px", borderRadius: "4px", background: "rgba(99, 102, 241, 0.2)", color: "#818cf8", fontWeight: 700 }}>
-                    {userPlan} PLAN
-                  </span>
-                </div>
+                <h5 style={{ margin: "0 0 4px 0" }}>{userName}</h5>
                 {userEmail && <p>{userEmail}</p>}
               </div>
 

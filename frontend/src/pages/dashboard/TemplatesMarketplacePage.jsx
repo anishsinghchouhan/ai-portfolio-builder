@@ -1,11 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortfolio } from "../../services/portfolioService";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
+import { getBuilderPath } from "../../constants/routes";
 import "./TemplatesMarketplacePage.css";
 
 export const TemplatesMarketplacePage = ({ onUseTemplate, onBack }) => {
+  const navigate = useNavigate();
   const { theme } = useDashboardTheme();
   const [searchQuery, setSearchQuery] = useState("");
+  const [actionError, setActionError] = useState(null);
   const [activeCategory, setActiveCategory] = useState(() => {
     const hash = window.location.hash;
     if (hash.includes("dev-templates")) return "developer";
@@ -103,6 +107,7 @@ export const TemplatesMarketplacePage = ({ onUseTemplate, onBack }) => {
     setCreatingTemplateId(tpl.id);
 
     try {
+      setActionError(null);
       const res = await createPortfolio({
         title: `${tpl.name} Portfolio`,
         theme: tpl.id,
@@ -116,13 +121,13 @@ export const TemplatesMarketplacePage = ({ onUseTemplate, onBack }) => {
         },
       });
 
-      const newId = res.data?.id;
+      const newId = res.data?.id || res.id;
       if (newId) {
         if (onUseTemplate) onUseTemplate(newId);
-        else window.location.hash = `#portfolio-builder?id=${newId}`;
+        else navigate(getBuilderPath(newId));
       }
     } catch (err) {
-      alert(`Failed to create portfolio from template: ${err.message}`);
+      setActionError(err.response?.data?.error?.message || err.message || "Failed to create portfolio from template.");
     } finally {
       setCreatingTemplateId(null);
     }
@@ -147,6 +152,27 @@ export const TemplatesMarketplacePage = ({ onUseTemplate, onBack }) => {
         <h1>Portfolio Templates Marketplace</h1>
         <p>Choose from dozens of high-converting, ATS-friendly portfolio templates crafted by world-class designers.</p>
       </div>
+
+      {actionError && (
+        <div
+          role="alert"
+          style={{
+            background: "rgba(239, 68, 68, 0.15)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            color: "#fca5a5",
+            padding: "10px 16px",
+            borderRadius: "8px",
+            margin: "0 0 16px 0",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "0.9rem",
+          }}
+        >
+          <span>⚠️</span>
+          <span>{actionError}</span>
+        </div>
+      )}
 
       {/* Controls Bar: Search & Categories */}
       <div className="marketplace-controls-bar">

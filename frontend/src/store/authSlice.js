@@ -11,6 +11,7 @@ class AuthStore {
       isLoading: true,
       pendingVerificationEmail: null,
       error: null,
+      syncError: null,
     };
     this.listeners = new Set();
   }
