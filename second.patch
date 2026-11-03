@@ -1,0 +1,908 @@
+diff --git a/backend/prisma/migrations/20261103100000_add_dashboard_summary_indexes/migration.sql b/backend/prisma/migrations/20261103100000_add_dashboard_summary_indexes/migration.sql
+new file mode 100644
+index 0000000..00b26d9
+--- /dev/null
++++ b/backend/prisma/migrations/20261103100000_add_dashboard_summary_indexes/migration.sql
+@@ -0,0 +1,18 @@
++-- Add performance indexes for dashboard summary queries and filters
++
++-- CreateIndex on resumes(userId) and resumes(userId, createdAt)
++CREATE INDEX IF NOT EXISTS "resumes_userId_idx" ON "resumes"("userId");
++CREATE INDEX IF NOT EXISTS "resumes_userId_createdAt_idx" ON "resumes"("userId", "createdAt" DESC);
++
++-- CreateIndex on portfolios(userId) and portfolios(userId, updatedAt)
++CREATE INDEX IF NOT EXISTS "portfolios_userId_idx" ON "portfolios"("userId");
++CREATE INDEX IF NOT EXISTS "portfolios_userId_updatedAt_idx" ON "portfolios"("userId", "updatedAt" DESC);
++
++-- CreateIndex on projects(portfolioId)
++CREATE INDEX IF NOT EXISTS "projects_portfolioId_idx" ON "projects"("portfolioId");
++
++-- CreateIndex on analytics(portfolioId), analytics(portfolioId, visitedAt), analytics(visitedAt)
++CREATE INDEX IF NOT EXISTS "analytics_portfolioId_idx" ON "analytics"("portfolioId");
++CREATE INDEX IF NOT EXISTS "analytics_portfolioId_visitedAt_idx" ON "analytics"("portfolioId", "visitedAt");
++CREATE INDEX IF NOT EXISTS "analytics_visitedAt_idx" ON "analytics"("visitedAt");
++
+diff --git a/backend/prisma/schema.prisma b/backend/prisma/schema.prisma
+index f918c94..47bbdad 100644
+--- a/backend/prisma/schema.prisma
++++ b/backend/prisma/schema.prisma
+@@ -56,6 +56,8 @@ model Resume {
+   createdAt     DateTime @default(now())
+   updatedAt     DateTime @updatedAt
+ 
++  @@index([userId])
++  @@index([userId, createdAt])
+   @@map("resumes")
+ }
+ 
+@@ -76,6 +78,8 @@ model Portfolio {
+   projects    Project[]
+   analytics   Analytics[]
+ 
++  @@index([userId])
++  @@index([userId, updatedAt])
+   @@map("portfolios")
+ }
+ 
+@@ -91,6 +95,7 @@ model Project {
+   imageUrl    String?
+   createdAt   DateTime  @default(now())
+ 
++  @@index([portfolioId])
+   @@map("projects")
+ }
+ 
+@@ -104,5 +109,8 @@ model Analytics {
+   referrer    String?
+   visitedAt   DateTime  @default(now())
+ 
++  @@index([portfolioId])
++  @@index([portfolioId, visitedAt])
++  @@index([visitedAt])
+   @@map("analytics")
+ }
+diff --git a/backend/src/services/dashboardService.js b/backend/src/services/dashboardService.js
+index b058881..7991a2b 100644
+--- a/backend/src/services/dashboardService.js
++++ b/backend/src/services/dashboardService.js
+@@ -191,205 +191,283 @@ export const calculateReadiness = ({ user, resumesCount, skillsCount, projectsCo
+   };
+ };
+ 
++// ─── IN-MEMORY SUMMARY CACHE (30-60s TTL keyed by userId) ───────────────────
++const summaryCache = new Map();
++const inFlightRequests = new Map();
++const CACHE_TTL_MS = 60 * 1000; // 60 seconds
++
+ /**
+- * Fetch and assemble comprehensive dashboard summary for authenticated user
++ * Invalidate summary cache for a specific user or clear entire cache
++ * @param {string} [userId] - User ID to invalidate, or omit to clear all
++ */
++export const invalidateDashboardSummaryCache = (userId) => {
++  if (userId) {
++    summaryCache.delete(userId);
++  } else {
++    summaryCache.clear();
++  }
++};
++
++// Periodic garbage collection to evict expired cache entries
++if (typeof setInterval !== "undefined") {
++  setInterval(() => {
++    const now = Date.now();
++    for (const [key, value] of summaryCache.entries()) {
++      if (now - value.timestamp > CACHE_TTL_MS) {
++        summaryCache.delete(key);
++      }
++    }
++  }, 5 * 60 * 1000).unref?.();
++}
++
++/**
++ * Fetch and assemble comprehensive dashboard summary for authenticated user.
++ * - Checks 60s in-memory cache first (0ms response).
++ * - Coalesces concurrent in-flight requests for the same user (prevents stampedes).
++ * - Combines views and unique visitors into a single SQL query.
++ * - Runs all independent queries in parallel via Promise.all.
+  *
+  * @param {string} userId - Prisma user ID
+  * @returns {Promise<object>} Clean dashboard metrics payload
+  */
+ export const getDashboardSummaryForUser = async (userId) => {
+-  // Calculate 7-day cutoff (midnight 6 days ago + today)
+-  const sevenDaysAgo = new Date();
+-  sevenDaysAgo.setHours(0, 0, 0, 0);
+-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+-
+-  // Parallel database calls strictly scoped by userId
+-  const [
+-    portfoliosCount,
+-    resumesCount,
+-    projectsCount,
+-    primaryPortfolio,
+-    latestResume,
+-    analyticsViewsCount,
+-    userProfile,
+-  ] = await Promise.all([
+-    prisma.portfolio.count({ where: { userId } }),
+-    prisma.resume.count({ where: { userId } }),
+-    prisma.project.count({ where: { portfolio: { userId } } }),
+-    prisma.portfolio.findFirst({
+-      where: { userId },
+-      orderBy: { updatedAt: "desc" },
+-      select: {
+-        id: true,
+-        title: true,
+-        slug: true,
+-        theme: true,
+-        status: true,
+-        content: true,
+-        updatedAt: true,
+-        createdAt: true,
+-      },
+-    }),
+-    prisma.resume.findFirst({
+-      where: { userId },
+-      orderBy: { createdAt: "desc" },
+-      select: {
+-        id: true,
+-        fileName: true,
+-        fileSize: true,
+-        fileUrl: true,
+-        isActive: true,
+-        createdAt: true,
+-      },
+-    }),
+-    // Source of truth: Analytics table only
+-    prisma.analytics.count({
+-      where: { portfolio: { userId } },
+-    }),
+-    prisma.user
+-      .findUnique({
+-        where: { id: userId },
+-        select: {
+-          fullName: true,
+-          headline: true,
+-          bio: true,
+-          location: true,
+-          phone: true,
+-          github: true,
+-          linkedin: true,
+-          website: true,
+-          avatarUrl: true,
+-        },
+-      })
+-      .catch(() =>
+-        prisma.user.findUnique({
+-          where: { id: userId },
+-          select: {
+-            fullName: true,
+-            avatarUrl: true,
+-          },
+-        })
+-      ),
+-  ]);
+-
+-  // Extract skills strictly from the primary portfolio's saved content
+-  const skillsList = primaryPortfolio ? extractSkillsFromPortfolioContent(primaryPortfolio.content) : [];
+-  const skillsCount = skillsList.length;
+-
+-  // Unique visitors calculation (distinct IP / visitor)
+-  let uniqueVisitors = 0;
+-  try {
+-    const distinctVisitors = await prisma.analytics.groupBy({
+-      by: ["ipAddress"],
+-      where: {
+-        portfolio: { userId },
+-        ipAddress: { not: null },
+-      },
+-    });
+-    uniqueVisitors = distinctVisitors.length;
+-  } catch {
+-    uniqueVisitors = 0;
+-  }
+-
+-  // 7-day daily views grouping via parameterized $queryRaw
+-  let rawDailyViews = [];
+-  try {
+-    rawDailyViews = await prisma.$queryRaw`
+-      SELECT
+-        DATE(a."visitedAt") as "visitDate",
+-        COUNT(*)::int as "viewsCount"
+-      FROM "analytics" a
+-      INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
+-      WHERE p."userId" = ${userId}
+-        AND a."visitedAt" >= ${sevenDaysAgo}
+-      GROUP BY DATE(a."visitedAt")
+-      ORDER BY "visitDate" ASC;
+-    `;
+-  } catch {
+-    rawDailyViews = [];
+-  }
++  if (!userId) return null;
+ 
+-  // Map 7-day query results to guarantee all 7 calendar days are present
+-  const viewsMap = new Map();
+-  for (const row of rawDailyViews) {
+-    const dStr = row.visitDate instanceof Date
+-      ? row.visitDate.toISOString().split("T")[0]
+-      : String(row.visitDate).slice(0, 10);
+-    viewsMap.set(dStr, Number(row.viewsCount) || 0);
++  // 1. Check in-memory cache
++  const cached = summaryCache.get(userId);
++  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
++    return cached.data;
+   }
+ 
+-  const last7Days = [];
+-  for (let i = 6; i >= 0; i--) {
+-    const targetDate = new Date();
+-    targetDate.setDate(targetDate.getDate() - i);
+-    const dateStr = targetDate.toISOString().split("T")[0];
+-    const dayLabel = targetDate.toLocaleDateString("en-US", { weekday: "short" });
+-
+-    last7Days.push({
+-      date: dateStr,
+-      day: dayLabel,
+-      views: viewsMap.get(dateStr) || 0,
+-    });
++  // 2. Deduplicate simultaneous in-flight requests for the same user
++  if (inFlightRequests.has(userId)) {
++    return inFlightRequests.get(userId);
+   }
+ 
+-  // Calculate separate Profile Strength (9 fields) and Portfolio Readiness (6 checks)
+-  const profileStrength = calculateProfileStrength(userProfile);
+-  const readiness = calculateReadiness({
+-    user: userProfile,
+-    resumesCount,
+-    skillsCount,
+-    projectsCount,
+-    primaryPortfolio,
+-  });
++  const fetchPromise = (async () => {
++    try {
++      // Calculate 7-day cutoff (midnight 6 days ago + today)
++      const sevenDaysAgo = new Date();
++      sevenDaysAgo.setHours(0, 0, 0, 0);
++      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+ 
+-  return {
+-    counts: {
+-      portfolios: portfoliosCount || 0,
+-      resumes: resumesCount || 0,
+-      projects: projectsCount || 0,
+-      skills: skillsCount || 0,
+-    },
+-    analytics: {
+-      views: analyticsViewsCount || 0,
+-      downloads: 0, // Explicitly 0 until download counter is implemented
+-      uniqueVisitors: uniqueVisitors || 0,
+-      last7Days: Array.isArray(last7Days) ? last7Days : [],
+-    },
+-    primaryPortfolio: primaryPortfolio
+-      ? {
+-          id: primaryPortfolio.id || null,
+-          title: primaryPortfolio.title || "",
+-          slug: primaryPortfolio.slug || "",
+-          publicUrl: primaryPortfolio.slug ? `/${primaryPortfolio.slug}` : "",
+-          status: primaryPortfolio.status || "DRAFT",
+-          isPublished: primaryPortfolio.status === "PUBLISHED",
+-          theme: primaryPortfolio.theme || null,
+-          updatedAt: primaryPortfolio.updatedAt || null,
++      // Helper: Combined analytics query (views + unique visitors in ONE query)
++      const fetchAnalyticsTotals = async () => {
++        try {
++          const res = await prisma.$queryRaw`
++            SELECT
++              COUNT(*)::int as "views",
++              COUNT(DISTINCT a."ipAddress")::int as "uniqueVisitors"
++            FROM "analytics" a
++            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
++            WHERE p."userId" = ${userId};
++          `;
++          if (Array.isArray(res) && res.length > 0) {
++            return {
++              views: Number(res[0].views) || 0,
++              uniqueVisitors: Number(res[0].uniqueVisitors) || 0,
++            };
++          }
++        } catch {
++          // Fallback to separate queries if $queryRaw fails
+         }
+-      : null,
+-    latestResume: latestResume
+-      ? {
+-          id: latestResume.id || null,
+-          fileName: latestResume.fileName || "",
+-          fileSize: latestResume.fileSize || 0,
+-          fileUrl: latestResume.fileUrl || null,
+-          isActive: Boolean(latestResume.isActive),
+-          createdAt: latestResume.createdAt || null,
++        const [views, distinctVisitors] = await Promise.all([
++          prisma.analytics.count({ where: { portfolio: { userId } } }).catch(() => 0),
++          prisma.analytics.groupBy({
++            by: ["ipAddress"],
++            where: { portfolio: { userId }, ipAddress: { not: null } },
++          }).then((r) => r.length).catch(() => 0),
++        ]);
++        return { views, uniqueVisitors: distinctVisitors };
++      };
++
++      // Helper: 7-day daily views grouping via parameterized $queryRaw
++      const fetchDailyViews = async () => {
++        try {
++          return await prisma.$queryRaw`
++            SELECT
++              DATE(a."visitedAt") as "visitDate",
++              COUNT(*)::int as "viewsCount"
++            FROM "analytics" a
++            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
++            WHERE p."userId" = ${userId}
++              AND a."visitedAt" >= ${sevenDaysAgo}
++            GROUP BY DATE(a."visitedAt")
++            ORDER BY "visitDate" ASC;
++          `;
++        } catch {
++          return [];
+         }
+-      : null,
+-    profileStrength: {
+-      score: profileStrength?.score || 0,
+-      total: profileStrength?.total || 9,
+-      percentage: profileStrength?.percentage || 0,
+-      filledFields: profileStrength?.filledFields || [],
+-      missingFields: profileStrength?.missingFields || [],
+-    },
+-    readiness: {
+-      percent: readiness?.percent || 0,
+-      completed: readiness?.completed || [],
+-      missing: readiness?.missing || [],
+-    },
+-  };
++      };
++
++      // Parallel database calls strictly scoped by userId - ALL independent queries in ONE Promise.all
++      const [
++        portfoliosCount,
++        resumesCount,
++        projectsCount,
++        primaryPortfolio,
++        latestResume,
++        userProfile,
++        analyticsTotals,
++        rawDailyViews,
++      ] = await Promise.all([
++        prisma.portfolio.count({ where: { userId } }),
++        prisma.resume.count({ where: { userId } }),
++        prisma.project.count({ where: { portfolio: { userId } } }),
++        prisma.portfolio.findFirst({
++          where: { userId },
++          orderBy: { updatedAt: "desc" },
++          select: {
++            id: true,
++            title: true,
++            slug: true,
++            theme: true,
++            status: true,
++            content: true,
++            updatedAt: true,
++            createdAt: true,
++          },
++        }),
++        prisma.resume.findFirst({
++          where: { userId },
++          orderBy: { createdAt: "desc" },
++          select: {
++            id: true,
++            fileName: true,
++            fileSize: true,
++            fileUrl: true,
++            isActive: true,
++            createdAt: true,
++          },
++        }),
++        prisma.user
++          .findUnique({
++            where: { id: userId },
++            select: {
++              fullName: true,
++              headline: true,
++              bio: true,
++              location: true,
++              phone: true,
++              github: true,
++              linkedin: true,
++              website: true,
++              avatarUrl: true,
++            },
++          })
++          .catch(() =>
++            prisma.user.findUnique({
++              where: { id: userId },
++              select: {
++                fullName: true,
++                avatarUrl: true,
++              },
++            })
++          ),
++        fetchAnalyticsTotals(),
++        fetchDailyViews(),
++      ]);
++
++      // Extract skills strictly from the primary portfolio's saved content
++      const skillsList = primaryPortfolio ? extractSkillsFromPortfolioContent(primaryPortfolio.content) : [];
++      const skillsCount = skillsList.length;
++
++      // Map 7-day query results to guarantee all 7 calendar days are present
++      const viewsMap = new Map();
++      for (const row of (rawDailyViews || [])) {
++        const dStr = row.visitDate instanceof Date
++          ? row.visitDate.toISOString().split("T")[0]
++          : String(row.visitDate).slice(0, 10);
++        viewsMap.set(dStr, Number(row.viewsCount) || 0);
++      }
++
++      const last7Days = [];
++      for (let i = 6; i >= 0; i--) {
++        const targetDate = new Date();
++        targetDate.setDate(targetDate.getDate() - i);
++        const dateStr = targetDate.toISOString().split("T")[0];
++        const dayLabel = targetDate.toLocaleDateString("en-US", { weekday: "short" });
++
++        last7Days.push({
++          date: dateStr,
++          day: dayLabel,
++          views: viewsMap.get(dateStr) || 0,
++        });
++      }
++
++      // Calculate separate Profile Strength (9 fields) and Portfolio Readiness (6 checks)
++      const profileStrength = calculateProfileStrength(userProfile);
++      const readiness = calculateReadiness({
++        user: userProfile,
++        resumesCount,
++        skillsCount,
++        projectsCount,
++        primaryPortfolio,
++      });
++
++      const result = {
++        counts: {
++          portfolios: portfoliosCount || 0,
++          resumes: resumesCount || 0,
++          projects: projectsCount || 0,
++          skills: skillsCount || 0,
++        },
++        analytics: {
++          views: analyticsTotals?.views || 0,
++          downloads: 0, // Explicitly 0 until download counter is implemented
++          uniqueVisitors: analyticsTotals?.uniqueVisitors || 0,
++          last7Days: Array.isArray(last7Days) ? last7Days : [],
++        },
++        primaryPortfolio: primaryPortfolio
++          ? {
++              id: primaryPortfolio.id || null,
++              title: primaryPortfolio.title || "",
++              slug: primaryPortfolio.slug || "",
++              publicUrl: primaryPortfolio.slug ? `/${primaryPortfolio.slug}` : "",
++              status: primaryPortfolio.status || "DRAFT",
++              isPublished: primaryPortfolio.status === "PUBLISHED",
++              theme: primaryPortfolio.theme || null,
++              updatedAt: primaryPortfolio.updatedAt || null,
++            }
++          : null,
++        latestResume: latestResume
++          ? {
++              id: latestResume.id || null,
++              fileName: latestResume.fileName || "",
++              fileSize: latestResume.fileSize || 0,
++              fileUrl: latestResume.fileUrl || null,
++              isActive: Boolean(latestResume.isActive),
++              createdAt: latestResume.createdAt || null,
++            }
++          : null,
++        profileStrength: {
++          score: profileStrength?.score || 0,
++          total: profileStrength?.total || 9,
++          percentage: profileStrength?.percentage || 0,
++          filledFields: profileStrength?.filledFields || [],
++          missingFields: profileStrength?.missingFields || [],
++        },
++        readiness: {
++          percent: readiness?.percent || 0,
++          completed: readiness?.completed || [],
++          missing: readiness?.missing || [],
++        },
++      };
++
++      // Store in memory cache with current timestamp
++      summaryCache.set(userId, {
++        timestamp: Date.now(),
++        data: result,
++      });
++
++      return result;
++    } finally {
++      inFlightRequests.delete(userId);
++    }
++  })();
++
++  inFlightRequests.set(userId, fetchPromise);
++  return fetchPromise;
+ };
+ 
+ export default {
+@@ -398,4 +476,5 @@ export default {
+   calculateReadiness,
+   extractSkillsFromPortfolioContent,
+   getDashboardSummaryForUser,
++  invalidateDashboardSummaryCache,
+ };
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index c65f6aa..1905854 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -9,6 +9,7 @@
+       "version": "0.0.0",
+       "dependencies": {
+         "@supabase/supabase-js": "^2.118.0",
++        "@tanstack/react-query": "^5.105.3",
+         "axios": "^1.7.9",
+         "react": "^19.0.0",
+         "react-dom": "^19.0.0",
+@@ -1651,6 +1652,38 @@
+         }
+       }
+     },
++    "node_modules/@tanstack/query-core": {
++      "version": "5.105.3",
++      "resolved": "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.105.3.tgz",
++      "integrity": "sha512-v1rbNy7MB/4Akth7CQH+CerV13K7Ok9hAusEsfz4sCjDdu3/kOSJPoWfoB+YjdEX1eBFBWKNAGE5nqZCgdlHDw==",
++      "license": "MIT",
++      "funding": {
++        "type": "github",
++        "url": "https://github.com/sponsors/tannerlinsley"
++      }
++    },
++    "node_modules/@tanstack/react-query": {
++      "version": "5.105.3",
++      "resolved": "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.105.3.tgz",
++      "integrity": "sha512-dj5hGWZmwoc9NG4enoXuYbiYwb5FxgJYPVv06eUgicMTfEMTRXn08Xv9D/r1V8TfjAv+BpxdvZFzJ1h3hSWZcQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@tanstack/query-core": "5.105.3"
++      },
++      "funding": {
++        "type": "github",
++        "url": "https://github.com/sponsors/tannerlinsley"
++      },
++      "peerDependencies": {
++        "@types/react": "^18 || ^19",
++        "react": "^18 || ^19"
++      },
++      "peerDependenciesMeta": {
++        "@types/react": {
++          "optional": true
++        }
++      }
++    },
+     "node_modules/@types/babel__core": {
+       "version": "7.20.5",
+       "resolved": "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.20.5.tgz",
+@@ -1707,7 +1740,7 @@
+       "version": "19.2.17",
+       "resolved": "https://registry.npmjs.org/@types/react/-/react-19.2.17.tgz",
+       "integrity": "sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "dependencies": {
+         "csstype": "^3.2.2"
+@@ -1891,7 +1924,7 @@
+       "version": "3.2.3",
+       "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT"
+     },
+     "node_modules/debug": {
+diff --git a/frontend/package.json b/frontend/package.json
+index d170dd2..55cd2bc 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -11,6 +11,7 @@
+   },
+   "dependencies": {
+     "@supabase/supabase-js": "^2.118.0",
++    "@tanstack/react-query": "^5.105.3",
+     "axios": "^1.7.9",
+     "react": "^19.0.0",
+     "react-dom": "^19.0.0",
+diff --git a/frontend/src/hooks/useDashboardSummary.js b/frontend/src/hooks/useDashboardSummary.js
+index bf725be..8de9219 100644
+--- a/frontend/src/hooks/useDashboardSummary.js
++++ b/frontend/src/hooks/useDashboardSummary.js
+@@ -1,126 +1,23 @@
+-import { useState, useEffect, useCallback, useRef } from "react";
+-import api from "../services/api";
+-import { normalizeSummary } from "../utils/normalizeSummary";
++import { queryClient } from "../lib/queryClient";
++import { useSummary, SUMMARY_QUERY_KEY, fetchSummaryApi } from "./useSummary";
+ 
+ /**
+- * Custom event helper to notify useDashboardSummary to refresh data silently
++ * Custom event helper to notify the query client to refresh summary data silently
+  * from anywhere in the application (after profile save, resume upload, publish).
+  */
+ export const triggerDashboardRefresh = () => {
++  queryClient.invalidateQueries({ queryKey: SUMMARY_QUERY_KEY });
+   if (typeof window !== "undefined") {
+     window.dispatchEvent(new CustomEvent("dashboard:refresh"));
+   }
+ };
+ 
+ /**
+- * Custom hook to fetch Dashboard Summary data.
+- * - Initial load shows loading skeleton.
+- * - Silent refetch (no loading skeleton) runs on window focus, tab visibility,
+- *   and every 60 seconds while the tab is visible.
+- * - Stops polling while an error is set.
+- * - Cleans up all listeners and the interval on unmount.
+- *
+- * @returns {{
+- *   summary: object|null,
+- *   loading: boolean,
+- *   error: string|null,
+- *   refetch: (options?: { silent?: boolean }) => Promise<void>
+- * }}
++ * Re-export useSummary as useDashboardSummary for backward compatibility.
++ * Now backed by @tanstack/react-query with queryKey ["summary"],
++ * staleTime: 60_000, and refetchOnWindowFocus: false.
+  */
+-export const useDashboardSummary = () => {
+-  const [summary, setSummary] = useState(null);
+-  const [loading, setLoading] = useState(true);
+-  const [error, setError] = useState(null);
++export const useDashboardSummary = useSummary;
+ 
+-  // Keep ref to error state so interval and event callbacks see the latest value
+-  const errorRef = useRef(error);
+-  useEffect(() => {
+-    errorRef.current = error;
+-  }, [error]);
+-
+-  // Guard against concurrent duplicate fetches (e.g. React StrictMode double mount)
+-  const isFetchingRef = useRef(false);
+-
+-  const fetchSummary = useCallback(async ({ silent = false } = {}) => {
+-    if (isFetchingRef.current) return;
+-    isFetchingRef.current = true;
+-
+-    if (!silent) {
+-      setLoading(true);
+-    }
+-    setError(null);
+-
+-    try {
+-      const response = await api.get("/dashboard/summary");
+-      if (response.data?.success && response.data?.data) {
+-        const normalized = normalizeSummary(response.data.data);
+-        setSummary(normalized);
+-      } else {
+-        throw new Error(response.data?.message || "Failed to load dashboard summary.");
+-      }
+-    } catch (err) {
+-      const message =
+-        err.response?.data?.error?.message ||
+-        err.response?.data?.message ||
+-        err.message ||
+-        "Could not connect to the dashboard service. Please check your network or try again.";
+-      setError(message);
+-    } finally {
+-      isFetchingRef.current = false;
+-      if (!silent) {
+-        setLoading(false);
+-      }
+-    }
+-  }, []);
+-
+-  // 1. Initial page load fetch
+-  useEffect(() => {
+-    fetchSummary({ silent: false });
+-  }, [fetchSummary]);
+-
+-  // 2. Auto-update listeners: window focus, tab visibility, 60s timer, custom refresh event
+-  useEffect(() => {
+-    const handleSilentRefresh = () => {
+-      // Do not poll or silent-refetch if an error is active
+-      if (!errorRef.current && typeof document !== "undefined" && document.visibilityState === "visible") {
+-        fetchSummary({ silent: true });
+-      }
+-    };
+-
+-    // Refetch on window focus
+-    window.addEventListener("focus", handleSilentRefresh);
+-
+-    // Refetch when tab becomes visible
+-    document.addEventListener("visibilitychange", handleSilentRefresh);
+-
+-    // Refetch when a page action (save, upload, publish) triggers refresh
+-    const handleCustomRefresh = () => {
+-      fetchSummary({ silent: true });
+-    };
+-    window.addEventListener("dashboard:refresh", handleCustomRefresh);
+-
+-    // Refetch every 60 seconds while tab is visible (if no error)
+-    const intervalId = setInterval(() => {
+-      if (!errorRef.current && document.visibilityState === "visible") {
+-        fetchSummary({ silent: true });
+-      }
+-    }, 60000);
+-
+-    // Clean up all listeners and interval on unmount
+-    return () => {
+-      window.removeEventListener("focus", handleSilentRefresh);
+-      document.removeEventListener("visibilitychange", handleSilentRefresh);
+-      window.removeEventListener("dashboard:refresh", handleCustomRefresh);
+-      clearInterval(intervalId);
+-    };
+-  }, [fetchSummary]);
+-
+-  return {
+-    summary,
+-    loading,
+-    error,
+-    refetch: fetchSummary,
+-  };
+-};
+-
+-export default useDashboardSummary;
++export { useSummary, SUMMARY_QUERY_KEY, fetchSummaryApi };
++export default useSummary;
+diff --git a/frontend/src/hooks/useSummary.js b/frontend/src/hooks/useSummary.js
+new file mode 100644
+index 0000000..aada1b2
+--- /dev/null
++++ b/frontend/src/hooks/useSummary.js
+@@ -0,0 +1,66 @@
++import { useQuery } from "@tanstack/react-query";
++import { queryClient } from "../lib/queryClient";
++import api from "../services/api";
++import { normalizeSummary } from "../utils/normalizeSummary";
++
++export const SUMMARY_QUERY_KEY = ["summary"];
++
++/**
++ * Triggers an invalidation of the summary query in the QueryClient.
++ * Can be called from mutation callbacks or event handlers anywhere in the app.
++ */
++export const triggerDashboardRefresh = () => {
++  queryClient.invalidateQueries({ queryKey: SUMMARY_QUERY_KEY });
++  if (typeof window !== "undefined") {
++    window.dispatchEvent(new CustomEvent("dashboard:refresh"));
++  }
++};
++
++/**
++ * Fetcher function for dashboard summary
++ */
++export const fetchSummaryApi = async () => {
++  const response = await api.get("/dashboard/summary");
++  if (response.data?.success && response.data?.data) {
++    return normalizeSummary(response.data.data);
++  }
++  throw new Error(response.data?.message || "Failed to load dashboard summary.");
++};
++
++/**
++ * Shared hook to fetch Dashboard Summary data using @tanstack/react-query.
++ *
++ * Requirements:
++ * - queryKey: ["summary"]
++ * - staleTime: 60_000 (60s)
++ * - refetchOnWindowFocus: false
++ *
++ * Automatically deduplicates requests and ensures only one request is in flight.
++ */
++export const useSummary = () => {
++  const query = useQuery({
++    queryKey: SUMMARY_QUERY_KEY,
++    queryFn: fetchSummaryApi,
++    staleTime: 60_000,
++    refetchOnWindowFocus: false,
++  });
++
++  const errorMessage = query.error
++    ? query.error?.response?.data?.error?.message ||
++      query.error?.response?.data?.message ||
++      query.error?.message ||
++      "Could not connect to the dashboard service. Please check your network or try again."
++    : null;
++
++  return {
++    summary: query.data || null,
++    data: query.data || null,
++    loading: query.isLoading,
++    isLoading: query.isLoading,
++    isFetching: query.isFetching,
++    error: errorMessage,
++    refetch: query.refetch,
++  };
++};
++
++export default useSummary;
+diff --git a/frontend/src/lib/queryClient.js b/frontend/src/lib/queryClient.js
+new file mode 100644
+index 0000000..f76ca15
+--- /dev/null
++++ b/frontend/src/lib/queryClient.js
+@@ -0,0 +1,20 @@
++import { QueryClient } from "@tanstack/react-query";
++
++/**
++ * Shared QueryClient instance for React Query.
++ * Configured with global defaults:
++ * - staleTime: 60_000 (1 minute)
++ * - refetchOnWindowFocus: false (avoids repeated requests when switching tabs or DevTools)
++ */
++export const queryClient = new QueryClient({
++  defaultOptions: {
++    queries: {
++      staleTime: 60_000,
++      refetchOnWindowFocus: false,
++      retry: 1,
++    },
++  },
++});
++
++export default queryClient;
++
+diff --git a/frontend/src/main.jsx b/frontend/src/main.jsx
+index b0e32bf..f8300b4 100644
+--- a/frontend/src/main.jsx
++++ b/frontend/src/main.jsx
+@@ -1,13 +1,17 @@
+ import { StrictMode } from "react";
+ import { createRoot } from "react-dom/client";
+ import { BrowserRouter } from "react-router-dom";
++import { QueryClientProvider } from "@tanstack/react-query";
++import { queryClient } from "./lib/queryClient";
+ import "./index.css";
+ import App from "./App.jsx";
+ 
+ createRoot(document.getElementById("root")).render(
+   <StrictMode>
+-    <BrowserRouter>
+-      <App />
+-    </BrowserRouter>
++    <QueryClientProvider client={queryClient}>
++      <BrowserRouter>
++        <App />
++      </BrowserRouter>
++    </QueryClientProvider>
+   </StrictMode>,
+ );
+diff --git a/frontend/src/pages/dashboard/DashboardHomePage.jsx b/frontend/src/pages/dashboard/DashboardHomePage.jsx
+index 5865895..d3b47d5 100644
+--- a/frontend/src/pages/dashboard/DashboardHomePage.jsx
++++ b/frontend/src/pages/dashboard/DashboardHomePage.jsx
+@@ -6,14 +6,14 @@ import PortfolioStatusWidget from "../../components/dashboard/PortfolioStatusWid
+ import RecentActivitySection from "../../components/dashboard/RecentActivitySection";
+ import AISuggestionsPanel from "../../components/dashboard/AISuggestionsPanel";
+ import { useAuth } from "../../hooks/useAuth";
+-import { useDashboardSummary } from "../../hooks/useDashboardSummary";
++import { useSummary } from "../../hooks/useSummary";
+ import { ROUTES } from "../../constants/routes";
+ import "./DashboardHomePage.css";
+ 
+ export const DashboardHomePage = ({ onNavigate }) => {
+   const { user, appUser } = useAuth();
+   const navigate = useNavigate();
+-  const { summary, loading, error, refetch } = useDashboardSummary();
++  const { summary, loading, error, refetch } = useSummary();
+ 
+   const userName = user?.user_metadata?.full_name || appUser?.name || user?.email?.split("@")[0] || "User";
+ 

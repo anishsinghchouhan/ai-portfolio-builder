@@ -141,3 +141,4 @@ export const ProductJourneySection = ({
 };
 
 export default ProductJourneySection;
+
