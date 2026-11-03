@@ -6,14 +6,14 @@ import PortfolioStatusWidget from "../../components/dashboard/PortfolioStatusWid
 import RecentActivitySection from "../../components/dashboard/RecentActivitySection";
 import AISuggestionsPanel from "../../components/dashboard/AISuggestionsPanel";
 import { useAuth } from "../../hooks/useAuth";
-import { useDashboardSummary } from "../../hooks/useDashboardSummary";
+import { useSummary } from "../../hooks/useSummary";
 import { ROUTES } from "../../constants/routes";
 import "./DashboardHomePage.css";
 
 export const DashboardHomePage = ({ onNavigate }) => {
   const { user, appUser } = useAuth();
   const navigate = useNavigate();
-  const { summary, loading, error, refetch } = useDashboardSummary();
+  const { summary, loading, error, refetch } = useSummary();
 
   const userName = user?.user_metadata?.full_name || appUser?.name || user?.email?.split("@")[0] || "User";
 
