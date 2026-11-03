@@ -86,7 +86,7 @@ export const DashboardHomePage = ({ onNavigate }) => {
       <AISuggestionsPanel
         profileStrength={summary?.profileStrength}
         resume={summary?.latestResume}
-        onApplyAction={(id, title) => {
+        onApplyAction={(id) => {
           if (onNavigate) onNavigate(id);
           else navigate(ROUTES.DASHBOARD_PROFILE);
         }}

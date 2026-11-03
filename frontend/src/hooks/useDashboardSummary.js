@@ -38,7 +38,13 @@ export const useDashboardSummary = () => {
     errorRef.current = error;
   }, [error]);
 
+  // Guard against concurrent duplicate fetches (e.g. React StrictMode double mount)
+  const isFetchingRef = useRef(false);
+
   const fetchSummary = useCallback(async ({ silent = false } = {}) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     if (!silent) {
       setLoading(true);
     }
@@ -60,6 +66,7 @@ export const useDashboardSummary = () => {
         "Could not connect to the dashboard service. Please check your network or try again.";
       setError(message);
     } finally {
+      isFetchingRef.current = false;
       if (!silent) {
         setLoading(false);
       }

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import { ROUTES } from "../../constants/routes";
 import "./AdminDashboardPage.css";
 
-export const AdminDashboardPage = ({ onBack }) => {
+export const AdminDashboardPage = () => {
   const { theme } = useDashboardTheme();
 
   const kpis = [

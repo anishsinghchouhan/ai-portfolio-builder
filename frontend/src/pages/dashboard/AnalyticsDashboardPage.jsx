@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import "./AnalyticsDashboardPage.css";
 
-export const AnalyticsDashboardPage = ({ onBack }) => {
+export const AnalyticsDashboardPage = () => {
   const { theme } = useDashboardTheme();
   const [dateRange, setDateRange] = useState("30d"); // "7d" | "30d" | "90d" | "1y"
 

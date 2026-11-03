@@ -3,7 +3,7 @@ import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import { triggerDashboardRefresh } from "../../hooks/useDashboardSummary";
 import "./ProfileSettingsPage.css";
 
-export const ProfileSettingsPage = ({ onBack }) => {
+export const ProfileSettingsPage = () => {
   const { theme } = useDashboardTheme();
   const [profile, setProfile] = useState({
     fullName: "Alex Morgan",

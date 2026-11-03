@@ -163,7 +163,7 @@ export const AuthCallback = () => {
       isSubscribed = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <div style={{

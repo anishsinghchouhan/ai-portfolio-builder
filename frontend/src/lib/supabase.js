@@ -22,20 +22,10 @@ const supabaseUrl = rawUrl || FALLBACK_URL;
 const supabaseAnonKey = rawKey || FALLBACK_KEY;
 
 if (import.meta.env.DEV) {
-  let host = "NONE";
-  try {
-    host = new URL(supabaseUrl).hostname;
-  } catch {
-    host = "INVALID_URL";
-  }
-  const keyPrefix = supabaseAnonKey ? supabaseAnonKey.substring(0, 15) + "..." : "NONE";
-
   if (!isConfigured) {
     console.info(
       `[Supabase Frontend Preview Mode] Running with mock credentials. Live auth is simulated for frontend inspection.`
     );
-  } else {
-    console.log(`[Supabase Initialized] Host: ${host}, Key Prefix: ${keyPrefix}`);
   }
 }
 

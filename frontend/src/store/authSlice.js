@@ -4,6 +4,7 @@ class AuthStore {
   constructor() {
     this.state = {
       user: null,
+      appUser: null,
       session: null,
       isAuthenticated: false,
       hasCompletedOnboarding: localStorage.getItem("ai_portfolio_onboarding_completed") === "true",
