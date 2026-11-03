@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getPortfolioById, updatePortfolioTheme } from "../../services/portfolioService";
+import { ROUTES, getBuilderPath } from "../../constants/routes";
 import "./ThemeCustomizationPage.css";
 
 export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBack }) => {
+  const navigate = useNavigate();
   const { portfolioId: paramId } = useParams();
   const portfolioId = propId || paramId;
   const [themeMode, setThemeMode] = useState("dark"); // "dark" | "light"
@@ -155,7 +157,7 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
             className="btn-apply-theme"
             onClick={() => {
               if (onBack) onBack();
-              else window.location.hash = "dashboard";
+              else navigate(ROUTES.DASHBOARD);
             }}
           >
             ← Return to Dashboard
@@ -165,8 +167,8 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
     );
   }
 
-  const candidateName = portfolio.content?.personal?.name || portfolio.user?.fullName || "Alex Morgan";
-  const candidateRole = portfolio.content?.personal?.headline || "Senior Full-Stack Engineer";
+  const candidateName = portfolio.content?.personal?.name || portfolio.user?.fullName || "Your Name";
+  const candidateRole = portfolio.content?.personal?.headline || portfolio.user?.headline || "Your Professional Title";
 
   return (
     <div className={`theme-page-root ${themeMode}`}>
@@ -178,7 +180,7 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
               type="button"
               onClick={() => {
                 if (onBack) onBack();
-                else window.location.hash = `portfolio-builder?id=${portfolioId}`;
+                else navigate(getBuilderPath(portfolioId));
               }}
               style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1rem" }}
               title="Back"

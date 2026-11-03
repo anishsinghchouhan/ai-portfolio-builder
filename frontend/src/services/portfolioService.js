@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { triggerDashboardRefresh } from "../hooks/useSummary";
 
 /**
  * Fetch all portfolios for the authenticated user
@@ -21,6 +22,7 @@ export const getPortfolioById = async (id) => {
  */
 export const createPortfolio = async (data = {}) => {
   const response = await api.post("/portfolios", data);
+  triggerDashboardRefresh();
   return response.data;
 };
 
@@ -31,6 +33,7 @@ export const updatePortfolio = async (id, contentUpdates) => {
   const response = await api.patch(`/portfolios/${id}`, {
     content: contentUpdates,
   });
+  triggerDashboardRefresh();
   return response.data;
 };
 
@@ -52,19 +55,19 @@ export const updatePortfolioTheme = async (id, themeConfig) => {
   };
 
   const response = await api.patch(`/portfolios/${id}`, {
-    theme: themeConfig.template || currentPortfolio.theme || "modern-dark",
+    theme: themeConfig.template || currentPortfolio.theme || "dark-glass",
     content: updatedContent,
   });
+  triggerDashboardRefresh();
   return response.data;
 };
 
 /**
- * Update portfolio publish status
+ * Publish portfolio to live status via dedicated /publish endpoint
  */
-export const publishPortfolio = async (id, status = "published") => {
-  const response = await api.patch(`/portfolios/${id}`, {
-    status,
-  });
+export const publishPortfolio = async (id) => {
+  const response = await api.patch(`/portfolios/${id}/publish`);
+  triggerDashboardRefresh();
   return response.data;
 };
 
@@ -73,6 +76,7 @@ export const publishPortfolio = async (id, status = "published") => {
  */
 export const deletePortfolio = async (id) => {
   const response = await api.delete(`/portfolios/${id}`);
+  triggerDashboardRefresh();
   return response.data;
 };
 

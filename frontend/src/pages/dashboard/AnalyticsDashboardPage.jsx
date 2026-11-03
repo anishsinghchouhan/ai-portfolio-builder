@@ -1,30 +1,53 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
+import { useSummary } from "../../hooks/useSummary";
+import { ROUTES } from "../../constants/routes";
 import "./AnalyticsDashboardPage.css";
 
 export const AnalyticsDashboardPage = () => {
   const { theme } = useDashboardTheme();
-  const [dateRange, setDateRange] = useState("30d"); // "7d" | "30d" | "90d" | "1y"
+  const { summary, loading } = useSummary();
+  const [selectedRange, setSelectedRange] = useState("7d");
+
+  const analytics = summary?.analytics || { views: 0, uniqueVisitors: 0, last7Days: [] };
+  const counts = summary?.counts || { portfolios: 0, published: 0, projects: 0 };
+  const last7Days = analytics.last7Days || [];
+
+  const totalViews = analytics.views || 0;
+  const uniqueVisitors = analytics.uniqueVisitors || 0;
+  const publishedCount = counts.published || 0;
+  const maxDailyViews = Math.max(...last7Days.map((d) => d.views || 0), 1);
 
   const kpis = [
-    { title: "Total Unique Visitors", value: "14,280", trend: "+24.5% vs last month", color: "cyan" },
-    { title: "Portfolio Page Views", value: "38,420", trend: "+18.2%", color: "indigo" },
-    { title: "Resume PDF Downloads", value: "1,840", trend: "+12.4%", color: "emerald" },
-    { title: "Recruiter Click-Through CTR", value: "18.4%", trend: "+3.1%", color: "amber" },
-  ];
-
-  const trafficSources = [
-    { name: "LinkedIn Profile & Posts", percentage: "45%", count: "6,426 visitors", barWidth: "45%" },
-    { name: "Direct Link Search / URL", percentage: "28%", count: "3,998 visitors", barWidth: "28%" },
-    { name: "GitHub Readme & Repositories", percentage: "18%", count: "2,570 visitors", barWidth: "18%" },
-    { name: "Twitter / X & Tech Blogs", percentage: "9%", count: "1,286 visitors", barWidth: "9%" },
-  ];
-
-  const performanceTable = [
-    { asset: "AI Portfolio Builder SaaS Project", views: "14,210 Views", ctr: "24.8% CTR", avgTime: "3m 42s" },
-    { asset: "Alex_Morgan_Senior_FullStack_Resume.pdf", views: "1,840 Downloads", ctr: "12.9% CTR", avgTime: "1m 15s" },
-    { asset: "Real-Time WebSocket Engine", views: "8,940 Views", ctr: "18.2% CTR", avgTime: "2m 10s" },
-    { asset: "Technical Skills Stack Section", views: "19,500 Views", ctr: "32.1% CTR", avgTime: "0m 45s" },
+    {
+      title: "Total Portfolio Views",
+      value: totalViews.toLocaleString(),
+      subtitle: "Lifetime visits across all portfolios",
+      color: "cyan",
+      icon: "👁️",
+    },
+    {
+      title: "Unique Visitors",
+      value: uniqueVisitors.toLocaleString(),
+      subtitle: "Hashed unique recruiter devices",
+      color: "indigo",
+      icon: "👤",
+    },
+    {
+      title: "Live Published Portfolios",
+      value: publishedCount.toLocaleString(),
+      subtitle: `${counts.portfolios || 0} total created`,
+      color: "emerald",
+      icon: "🚀",
+    },
+    {
+      title: "Showcased Projects",
+      value: (counts.projects || 0).toLocaleString(),
+      subtitle: "Across active portfolio sections",
+      color: "amber",
+      icon: "💻",
+    },
   ];
 
   return (
@@ -35,26 +58,28 @@ export const AnalyticsDashboardPage = () => {
       {/* Header Bar */}
       <div className="analytics-header-bar">
         <div className="analytics-title-group">
-          <h1>Portfolio Traffic Analytics & Metrics</h1>
-          <p>Real-time telemetry tracking recruiter views, resume downloads, and click-through metrics.</p>
+          <h1>Portfolio Traffic Analytics</h1>
+          <p>Real telemetry tracking unique recruiter visits and daily traffic.</p>
         </div>
 
-        {/* Date Range Selector Pills */}
+        {/* Range Selector */}
         <div className="date-range-selector">
-          {[
-            { id: "7d", label: "7 Days" },
-            { id: "30d", label: "30 Days" },
-            { id: "90d", label: "90 Days" },
-            { id: "1y", label: "1 Year" },
-          ].map((range) => (
-            <button
-              key={range.id}
-              className={`btn-range-pill ${dateRange === range.id ? "active" : ""}`}
-              onClick={() => setDateRange(range.id)}
-            >
-              {range.label}
-            </button>
-          ))}
+          <button
+            type="button"
+            className={`btn-range-pill ${selectedRange === "7d" ? "active" : ""}`}
+            onClick={() => setSelectedRange("7d")}
+          >
+            Last 7 Days
+          </button>
+          <button
+            type="button"
+            className="btn-range-pill"
+            style={{ opacity: 0.5, cursor: "not-allowed" }}
+            title="30-day historical reporting is coming in Round 2"
+            disabled
+          >
+            30 Days (Preview)
+          </button>
         </div>
       </div>
 
@@ -64,108 +89,177 @@ export const AnalyticsDashboardPage = () => {
           <div key={idx} className="kpi-card-item">
             <div className="kpi-top-row">
               <span className="kpi-title-text">{kpi.title}</span>
-              <span style={{ fontSize: "1.1rem" }}>📊</span>
+              <span style={{ fontSize: "1.1rem" }}>{kpi.icon}</span>
             </div>
-            <div className={`kpi-huge-number ${kpi.color}`}>{kpi.value}</div>
-            <div className="kpi-trend-pill">
-              <span>↑</span>
-              <span>{kpi.trend}</span>
+            <div className={`kpi-huge-number ${kpi.color}`}>
+              {loading ? "..." : kpi.value}
+            </div>
+            <div className="kpi-trend-pill" style={{ color: "#94a3b8" }}>
+              <span>{kpi.subtitle}</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Main Area Chart + Traffic Sources Grid */}
+      {/* Main 7-day Activity Chart */}
       <div className="analytics-main-charts-grid">
-        {/* Left: SVG Area Trend Graph Box */}
-        <div className="chart-card-box">
+        <div className="chart-card-box" style={{ gridColumn: "1 / -1" }}>
           <div className="chart-header-row">
-            <h3>📈 Portfolio Traffic & Views Trend ({dateRange.toUpperCase()})</h3>
-            <span style={{ fontSize: "0.8rem", color: "#34d399", fontWeight: 700 }}>● Real-time Active</span>
+            <div>
+              <h3 style={{ margin: 0 }}>📈 Daily Views Trend (Last 7 Days)</h3>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.825rem", color: "#94a3b8" }}>
+                Visits recorded when external visitors view your published public portfolio link.
+              </p>
+            </div>
+            <span style={{ fontSize: "0.8rem", color: "#34d399", fontWeight: 700 }}>
+              ● Live Telemetry
+            </span>
           </div>
 
-          <div className="svg-graph-container">
-            <svg viewBox="0 0 500 200">
-              <defs>
-                <linearGradient id="areaGraphGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#818cf8" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
+          {totalViews === 0 ? (
+            <div
+              style={{
+                padding: "3.5rem 1.5rem",
+                textAlign: "center",
+                color: "#94a3b8",
+                background: "rgba(15, 23, 42, 0.4)",
+                borderRadius: "12px",
+                margin: "1.5rem 0",
+              }}
+            >
+              <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📊</div>
+              <h4 style={{ color: "#f8fafc", margin: "0 0 0.5rem 0", fontSize: "1.1rem" }}>
+                No Visitor Telemetry Recorded Yet
+              </h4>
+              <p style={{ maxWidth: "450px", margin: "0 auto 1.5rem auto", fontSize: "0.875rem", lineHeight: 1.5 }}>
+                Publish your portfolio and share your live link with recruiters to begin tracking real view activity.
+              </p>
+              {summary?.primaryPortfolio?.id ? (
+                <Link
+                  to={`/dashboard/publish/${summary.primaryPortfolio.id}`}
+                  style={{
+                    display: "inline-block",
+                    padding: "0.6rem 1.25rem",
+                    background: "#6366f1",
+                    color: "#ffffff",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  🚀 Publish Portfolio
+                </Link>
+              ) : (
+                <Link
+                  to={ROUTES.DASHBOARD}
+                  style={{
+                    display: "inline-block",
+                    padding: "0.6rem 1.25rem",
+                    background: "#6366f1",
+                    color: "#ffffff",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  Create Your First Portfolio
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: "12px",
+                height: "200px",
+                padding: "2rem 1rem 1rem 1rem",
+                margin: "1rem 0",
+              }}
+            >
+              {last7Days.map((item, idx) => {
+                const heightPercent = Math.max(
+                  Math.round((item.views / maxDailyViews) * 100),
+                  item.views > 0 ? 8 : 2
+                );
+                const dayLabel = new Date(item.date).toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "numeric",
+                  day: "numeric",
+                });
 
-              {/* Area Fill */}
-              <path
-                d="M 0,180 Q 80,120 150,140 T 300,70 T 450,40 L 500,60 L 500,200 L 0,200 Z"
-                fill="url(#areaGraphGradient)"
-              />
-
-              {/* Stroke Line */}
-              <path
-                d="M 0,180 Q 80,120 150,140 T 300,70 T 450,40 L 500,60"
-                fill="none"
-                stroke="#818cf8"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-              />
-
-              {/* Data Points */}
-              <circle cx="150" cy="140" r="5" fill="#38bdf8" />
-              <circle cx="300" cy="70" r="5" fill="#38bdf8" />
-              <circle cx="450" cy="40" r="6" fill="#34d399" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Right: Traffic Sources Breakdown Bar List */}
-        <div className="chart-card-box">
-          <div className="chart-header-row">
-            <h3>🌐 Top Traffic Referrers</h3>
-          </div>
-
-          <div className="traffic-sources-list">
-            {trafficSources.map((source, idx) => (
-              <div key={idx} className="source-item-row">
-                <div className="source-meta-row">
-                  <span className="source-name-text">{source.name}</span>
-                  <span className="source-percentage-text">{source.percentage}</span>
-                </div>
-                <div className="source-bar-track">
-                  <div className="source-bar-fill" style={{ width: source.barWidth }} />
-                </div>
-                <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{source.count}</span>
-              </div>
-            ))}
-          </div>
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      height: "100%",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.75rem", color: item.views > 0 ? "#818cf8" : "#64748b", fontWeight: 600 }}>
+                      {item.views}
+                    </span>
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: "42px",
+                        height: `${heightPercent}%`,
+                        background:
+                          item.views > 0
+                            ? "linear-gradient(180deg, #6366f1 0%, #4338ca 100%)"
+                            : "rgba(255, 255, 255, 0.05)",
+                        borderRadius: "6px 6px 2px 2px",
+                        transition: "height 0.3s ease",
+                      }}
+                      title={`${dayLabel}: ${item.views} views`}
+                    />
+                    <span style={{ fontSize: "0.7rem", color: "#94a3b8", whiteSpace: "nowrap" }}>
+                      {dayLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Bottom Section: Portfolio Performance Table */}
-      <div className="performance-table-card">
-        <div className="chart-header-row">
-          <h3>⚡ Top Performing Portfolio Assets & Projects</h3>
-          <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Sorted by recruiter engagement</span>
+      {/* Traffic Sources Preview Banner */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          padding: "1.25rem 1.5rem",
+          background: "rgba(15, 23, 42, 0.6)",
+          border: "1px dashed rgba(148, 163, 184, 0.25)",
+          borderRadius: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontWeight: 600, color: "#f8fafc", fontSize: "0.95rem" }}>
+              🌐 Advanced Traffic Sources & Geo Analytics
+            </span>
+            <span style={{ fontSize: "0.7rem", padding: "2px 8px", background: "rgba(148, 163, 184, 0.15)", color: "#94a3b8", borderRadius: "6px" }}>
+              Preview — Coming soon
+            </span>
+          </div>
+          <p style={{ margin: "4px 0 0 0", fontSize: "0.825rem", color: "#94a3b8" }}>
+            Referrer breakdown (LinkedIn, GitHub, Direct) and geographic country telemetry will be available in Round 2.
+          </p>
         </div>
-
-        <table className="performance-table">
-          <thead>
-            <tr>
-              <th>Asset Name</th>
-              <th>Views / Downloads</th>
-              <th>Click-Through Rate</th>
-              <th>Avg Session Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {performanceTable.map((row, idx) => (
-              <tr key={idx}>
-                <td style={{ fontWeight: 700 }}>{row.asset}</td>
-                <td style={{ color: "#38bdf8" }}>{row.views}</td>
-                <td style={{ color: "#34d399", fontWeight: 700 }}>{row.ctr}</td>
-                <td style={{ color: "#cbd5e1" }}>{row.avgTime}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

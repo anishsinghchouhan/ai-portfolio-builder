@@ -3,6 +3,7 @@ import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
 import { clearUserCache } from "../middleware/authMiddleware.js";
+import { invalidateDashboardSummaryCache } from "../services/dashboardService.js";
 
 // Helper for validating optional HTTP/HTTPS URL or null/empty
 const optionalUrlSchema = (fieldName, maxLength = 255) =>
@@ -148,8 +149,9 @@ export const updateMe = catchAsync(async (req, res, next) => {
     },
   });
 
-  // Invalidate in-memory cache so subsequent requests load fresh profile immediately
+  // Invalidate in-memory user cache and dashboard summary cache
   clearUserCache(supabaseUserId);
+  invalidateDashboardSummaryCache(updatedUser.id);
 
   res.status(200).json({
     success: true,

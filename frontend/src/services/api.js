@@ -1,12 +1,15 @@
 import axios from "axios";
 import { supabase } from "../lib/supabase";
 
+export const isApiConfigured = Boolean(import.meta.env.VITE_API_URL);
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL is missing from environment variables");
+if (!isApiConfigured && import.meta.env.DEV) {
+  console.warn(
+    "[API Configuration Warning] VITE_API_URL is missing in environment variables. Defaulting to http://localhost:5001/api/v1 for development."
+  );
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5001/api/v1" : "");
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,7 +18,6 @@ export const api = axios.create({
   },
   withCredentials: true,
 });
-
 
 // Request Interceptor: Attach Supabase Bearer token dynamically
 api.interceptors.request.use(

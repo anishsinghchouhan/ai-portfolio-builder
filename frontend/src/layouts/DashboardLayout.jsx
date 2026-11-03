@@ -11,7 +11,23 @@ export const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
-  const isMobileOpen = false;
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
+  // Close mobile drawer on route changes
+  React.useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile drawer on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isMobileOpen) {
+        setIsMobileOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileOpen]);
 
   // Derive active menu item from current route
   const getActiveItem = () => {
@@ -59,6 +75,7 @@ export const DashboardLayout = () => {
     };
     const targetRoute = routeMap[id];
     if (targetRoute) {
+      setIsMobileOpen(false);
       navigate(targetRoute);
     }
   };
@@ -68,6 +85,15 @@ export const DashboardLayout = () => {
       {/* Background Mesh Glows */}
       <div className="dash-bg-mesh" />
       <div className="dash-bg-glow" />
+
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div
+          className="mobile-sidebar-backdrop"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Persistent Dashboard Sidebar */}
       <Sidebar
@@ -84,6 +110,8 @@ export const DashboardLayout = () => {
         {/* Persistent Dashboard Top Navigation Header */}
         <Header
           breadcrumbPath={getBreadcrumbPath()}
+          isMobileOpen={isMobileOpen}
+          onToggleMobileMenu={() => setIsMobileOpen((prev) => !prev)}
           onQuickAdd={() => navigate(ROUTES.DASHBOARD_UPLOAD)}
           onAiSearch={() => navigate(ROUTES.DASHBOARD_UPLOAD)}
           onOpenNotifications={() => navigate(ROUTES.DASHBOARD_SETTINGS)}

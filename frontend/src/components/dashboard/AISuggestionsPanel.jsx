@@ -21,13 +21,13 @@ export const AISuggestionsPanel = ({ profileStrength, resume, onApplyAction }) =
     <div className={`ai-panel-root ${theme}`}>
       {/* Top Greeting Banner */}
       <div className="ai-greeting-banner">
-        <div className="ai-avatar-ring">✨</div>
+        <div className="ai-avatar-ring">🎯</div>
         <div className="ai-greeting-text">
-          <h3>AI Portfolio Coach</h3>
+          <h3>Portfolio Optimization Coach</h3>
           <p>
             {resume
               ? `Resume connected: ${resume.fileName}. Complete your profile fields for higher search visibility.`
-              : "Upload your resume to receive tailored AI recommendations and automated portfolio section generation."}
+              : "Complete your candidate profile details and customize your portfolio to maximize recruiter response rate."}
           </p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export const AISuggestionsPanel = ({ profileStrength, resume, onApplyAction }) =
       {missingFields.length > 0 ? (
         <>
           <div className="ai-recommendations-title">
-            <span>⚡ Recommended Actions ({missingFields.length.toLocaleString()})</span>
+            <span>⚡ Optimization Recommendations ({missingFields.length.toLocaleString()})</span>
           </div>
 
           <div className="ai-recommendations-grid">

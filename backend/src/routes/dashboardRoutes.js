@@ -9,6 +9,6 @@ const router = express.Router();
  * GET /api/v1/dashboard/summary
  * Protected route returning counts, analytics, main portfolio, and readiness
  */
-router.get("/summary", protect, dashboardLimiter, getDashboardSummary);
+router.get("/summary", dashboardLimiter, protect, getDashboardSummary);
 
 export default router;

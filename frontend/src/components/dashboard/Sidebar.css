@@ -273,14 +273,30 @@
   white-space: nowrap;
 }
 
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .sidebar-root {
     transform: translateX(-100%);
+    z-index: 50;
   }
 
   .sidebar-root.mobile-open {
     transform: translateX(0);
     width: 260px !important;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 11, 17, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 45;
+    animation: fadeIn 0.2s ease;
   }
 }
 

@@ -77,6 +77,28 @@ export const ResumeUploadPage = ({ onUploadSuccess }) => {
         </p>
       </div>
 
+      {/* Round 2 Preview Disclaimer Banner */}
+      <div
+        role="status"
+        style={{
+          background: "rgba(99, 102, 241, 0.12)",
+          border: "1px solid rgba(99, 102, 241, 0.35)",
+          color: "#c7d2fe",
+          padding: "12px 18px",
+          borderRadius: "12px",
+          marginBottom: "1.25rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          fontSize: "0.9rem",
+        }}
+      >
+        <span style={{ fontSize: "1.25rem" }}>ℹ️</span>
+        <div>
+          <strong style={{ color: "#ffffff" }}>Preview — not connected yet:</strong> Resume PDF parsing, section extraction, and cloud storage are scheduled for Round 2. Files uploaded here are preview-only and will not persist.
+        </div>
+      </div>
+
       {/* Validation Error Banner */}
       {uploadError && (
         <div

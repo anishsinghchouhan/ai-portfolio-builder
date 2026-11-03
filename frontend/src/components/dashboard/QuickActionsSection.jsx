@@ -85,10 +85,12 @@ export const QuickActionsSection = ({ onActionClick }) => {
 
       <div className="quick-actions-grid-8">
         {actionsList.map((action) => (
-          <div
+          <button
             key={action.id}
+            type="button"
             className={`large-action-card ${action.colorTheme}`}
             onClick={() => handleCardClick(action.id, action.title)}
+            aria-label={`${action.title}: ${action.description}`}
           >
             {/* Top Row: Icon Badge & Arrow */}
             <div className="action-card-top">
@@ -106,7 +108,7 @@ export const QuickActionsSection = ({ onActionClick }) => {
               <h4>{action.title}</h4>
               <p>{action.description}</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </section>

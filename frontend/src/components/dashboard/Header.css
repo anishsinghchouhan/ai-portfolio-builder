@@ -20,11 +20,41 @@
   transition: all 0.3s ease;
 }
 
-/* Left Section: Breadcrumb & Search Group */
-.header-left-group {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
+.btn-mobile-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header-root {
+    padding: 0 1rem;
+  }
+
+  .btn-mobile-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #f8fafc;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+
+  .btn-mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .header-breadcrumb {
+    font-size: 0.775rem;
+  }
+
+  .btn-quick-add span {
+    display: none;
+  }
 }
 
 /* Breadcrumb Navigation */
