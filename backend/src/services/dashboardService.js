@@ -191,205 +191,283 @@ export const calculateReadiness = ({ user, resumesCount, skillsCount, projectsCo
   };
 };
 
+// ─── IN-MEMORY SUMMARY CACHE (30-60s TTL keyed by userId) ───────────────────
+const summaryCache = new Map();
+const inFlightRequests = new Map();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
 /**
- * Fetch and assemble comprehensive dashboard summary for authenticated user
+ * Invalidate summary cache for a specific user or clear entire cache
+ * @param {string} [userId] - User ID to invalidate, or omit to clear all
+ */
+export const invalidateDashboardSummaryCache = (userId) => {
+  if (userId) {
+    summaryCache.delete(userId);
+  } else {
+    summaryCache.clear();
+  }
+};
+
+// Periodic garbage collection to evict expired cache entries
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of summaryCache.entries()) {
+      if (now - value.timestamp > CACHE_TTL_MS) {
+        summaryCache.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000).unref?.();
+}
+
+/**
+ * Fetch and assemble comprehensive dashboard summary for authenticated user.
+ * - Checks 60s in-memory cache first (0ms response).
+ * - Coalesces concurrent in-flight requests for the same user (prevents stampedes).
+ * - Combines views and unique visitors into a single SQL query.
+ * - Runs all independent queries in parallel via Promise.all.
  *
  * @param {string} userId - Prisma user ID
  * @returns {Promise<object>} Clean dashboard metrics payload
  */
 export const getDashboardSummaryForUser = async (userId) => {
-  // Calculate 7-day cutoff (midnight 6 days ago + today)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  if (!userId) return null;
 
-  // Parallel database calls strictly scoped by userId
-  const [
-    portfoliosCount,
-    resumesCount,
-    projectsCount,
-    primaryPortfolio,
-    latestResume,
-    analyticsViewsCount,
-    userProfile,
-  ] = await Promise.all([
-    prisma.portfolio.count({ where: { userId } }),
-    prisma.resume.count({ where: { userId } }),
-    prisma.project.count({ where: { portfolio: { userId } } }),
-    prisma.portfolio.findFirst({
-      where: { userId },
-      orderBy: { updatedAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        theme: true,
-        status: true,
-        content: true,
-        updatedAt: true,
-        createdAt: true,
-      },
-    }),
-    prisma.resume.findFirst({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        fileName: true,
-        fileSize: true,
-        fileUrl: true,
-        isActive: true,
-        createdAt: true,
-      },
-    }),
-    // Source of truth: Analytics table only
-    prisma.analytics.count({
-      where: { portfolio: { userId } },
-    }),
-    prisma.user
-      .findUnique({
-        where: { id: userId },
-        select: {
-          fullName: true,
-          headline: true,
-          bio: true,
-          location: true,
-          phone: true,
-          github: true,
-          linkedin: true,
-          website: true,
-          avatarUrl: true,
-        },
-      })
-      .catch(() =>
-        prisma.user.findUnique({
-          where: { id: userId },
+  // 1. Check in-memory cache
+  const cached = summaryCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  // 2. Deduplicate simultaneous in-flight requests for the same user
+  if (inFlightRequests.has(userId)) {
+    return inFlightRequests.get(userId);
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      // Calculate 7-day cutoff (midnight 6 days ago + today)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+      // Helper: Combined analytics query (views + unique visitors in ONE query)
+      const fetchAnalyticsTotals = async () => {
+        try {
+          const res = await prisma.$queryRaw`
+            SELECT
+              COUNT(*)::int as "views",
+              COUNT(DISTINCT a."ipAddress")::int as "uniqueVisitors"
+            FROM "analytics" a
+            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
+            WHERE p."userId" = ${userId};
+          `;
+          if (Array.isArray(res) && res.length > 0) {
+            return {
+              views: Number(res[0].views) || 0,
+              uniqueVisitors: Number(res[0].uniqueVisitors) || 0,
+            };
+          }
+        } catch {
+          // Fallback to separate queries if $queryRaw fails
+        }
+        const [views, distinctVisitors] = await Promise.all([
+          prisma.analytics.count({ where: { portfolio: { userId } } }).catch(() => 0),
+          prisma.analytics.groupBy({
+            by: ["ipAddress"],
+            where: { portfolio: { userId }, ipAddress: { not: null } },
+          }).then((r) => r.length).catch(() => 0),
+        ]);
+        return { views, uniqueVisitors: distinctVisitors };
+      };
+
+      // Helper: 7-day daily views grouping via parameterized $queryRaw
+      const fetchDailyViews = async () => {
+        try {
+          return await prisma.$queryRaw`
+            SELECT
+              DATE(a."visitedAt") as "visitDate",
+              COUNT(*)::int as "viewsCount"
+            FROM "analytics" a
+            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
+            WHERE p."userId" = ${userId}
+              AND a."visitedAt" >= ${sevenDaysAgo}
+            GROUP BY DATE(a."visitedAt")
+            ORDER BY "visitDate" ASC;
+          `;
+        } catch {
+          return [];
+        }
+      };
+
+      // Parallel database calls strictly scoped by userId - ALL independent queries in ONE Promise.all
+      const [
+        portfoliosCount,
+        resumesCount,
+        projectsCount,
+        primaryPortfolio,
+        latestResume,
+        userProfile,
+        analyticsTotals,
+        rawDailyViews,
+      ] = await Promise.all([
+        prisma.portfolio.count({ where: { userId } }),
+        prisma.resume.count({ where: { userId } }),
+        prisma.project.count({ where: { portfolio: { userId } } }),
+        prisma.portfolio.findFirst({
+          where: { userId },
+          orderBy: { updatedAt: "desc" },
           select: {
-            fullName: true,
-            avatarUrl: true,
+            id: true,
+            title: true,
+            slug: true,
+            theme: true,
+            status: true,
+            content: true,
+            updatedAt: true,
+            createdAt: true,
           },
-        })
-      ),
-  ]);
+        }),
+        prisma.resume.findFirst({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            fileUrl: true,
+            isActive: true,
+            createdAt: true,
+          },
+        }),
+        prisma.user
+          .findUnique({
+            where: { id: userId },
+            select: {
+              fullName: true,
+              headline: true,
+              bio: true,
+              location: true,
+              phone: true,
+              github: true,
+              linkedin: true,
+              website: true,
+              avatarUrl: true,
+            },
+          })
+          .catch(() =>
+            prisma.user.findUnique({
+              where: { id: userId },
+              select: {
+                fullName: true,
+                avatarUrl: true,
+              },
+            })
+          ),
+        fetchAnalyticsTotals(),
+        fetchDailyViews(),
+      ]);
 
-  // Extract skills strictly from the primary portfolio's saved content
-  const skillsList = primaryPortfolio ? extractSkillsFromPortfolioContent(primaryPortfolio.content) : [];
-  const skillsCount = skillsList.length;
+      // Extract skills strictly from the primary portfolio's saved content
+      const skillsList = primaryPortfolio ? extractSkillsFromPortfolioContent(primaryPortfolio.content) : [];
+      const skillsCount = skillsList.length;
 
-  // Unique visitors calculation (distinct IP / visitor)
-  let uniqueVisitors = 0;
-  try {
-    const distinctVisitors = await prisma.analytics.groupBy({
-      by: ["ipAddress"],
-      where: {
-        portfolio: { userId },
-        ipAddress: { not: null },
-      },
-    });
-    uniqueVisitors = distinctVisitors.length;
-  } catch {
-    uniqueVisitors = 0;
-  }
+      // Map 7-day query results to guarantee all 7 calendar days are present
+      const viewsMap = new Map();
+      for (const row of (rawDailyViews || [])) {
+        const dStr = row.visitDate instanceof Date
+          ? row.visitDate.toISOString().split("T")[0]
+          : String(row.visitDate).slice(0, 10);
+        viewsMap.set(dStr, Number(row.viewsCount) || 0);
+      }
 
-  // 7-day daily views grouping via parameterized $queryRaw
-  let rawDailyViews = [];
-  try {
-    rawDailyViews = await prisma.$queryRaw`
-      SELECT
-        DATE(a."visitedAt") as "visitDate",
-        COUNT(*)::int as "viewsCount"
-      FROM "analytics" a
-      INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
-      WHERE p."userId" = ${userId}
-        AND a."visitedAt" >= ${sevenDaysAgo}
-      GROUP BY DATE(a."visitedAt")
-      ORDER BY "visitDate" ASC;
-    `;
-  } catch {
-    rawDailyViews = [];
-  }
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) {
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() - i);
+        const dateStr = targetDate.toISOString().split("T")[0];
+        const dayLabel = targetDate.toLocaleDateString("en-US", { weekday: "short" });
 
-  // Map 7-day query results to guarantee all 7 calendar days are present
-  const viewsMap = new Map();
-  for (const row of rawDailyViews) {
-    const dStr = row.visitDate instanceof Date
-      ? row.visitDate.toISOString().split("T")[0]
-      : String(row.visitDate).slice(0, 10);
-    viewsMap.set(dStr, Number(row.viewsCount) || 0);
-  }
+        last7Days.push({
+          date: dateStr,
+          day: dayLabel,
+          views: viewsMap.get(dateStr) || 0,
+        });
+      }
 
-  const last7Days = [];
-  for (let i = 6; i >= 0; i--) {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() - i);
-    const dateStr = targetDate.toISOString().split("T")[0];
-    const dayLabel = targetDate.toLocaleDateString("en-US", { weekday: "short" });
+      // Calculate separate Profile Strength (9 fields) and Portfolio Readiness (6 checks)
+      const profileStrength = calculateProfileStrength(userProfile);
+      const readiness = calculateReadiness({
+        user: userProfile,
+        resumesCount,
+        skillsCount,
+        projectsCount,
+        primaryPortfolio,
+      });
 
-    last7Days.push({
-      date: dateStr,
-      day: dayLabel,
-      views: viewsMap.get(dateStr) || 0,
-    });
-  }
+      const result = {
+        counts: {
+          portfolios: portfoliosCount || 0,
+          resumes: resumesCount || 0,
+          projects: projectsCount || 0,
+          skills: skillsCount || 0,
+        },
+        analytics: {
+          views: analyticsTotals?.views || 0,
+          downloads: 0, // Explicitly 0 until download counter is implemented
+          uniqueVisitors: analyticsTotals?.uniqueVisitors || 0,
+          last7Days: Array.isArray(last7Days) ? last7Days : [],
+        },
+        primaryPortfolio: primaryPortfolio
+          ? {
+              id: primaryPortfolio.id || null,
+              title: primaryPortfolio.title || "",
+              slug: primaryPortfolio.slug || "",
+              publicUrl: primaryPortfolio.slug ? `/${primaryPortfolio.slug}` : "",
+              status: primaryPortfolio.status || "DRAFT",
+              isPublished: primaryPortfolio.status === "PUBLISHED",
+              theme: primaryPortfolio.theme || null,
+              updatedAt: primaryPortfolio.updatedAt || null,
+            }
+          : null,
+        latestResume: latestResume
+          ? {
+              id: latestResume.id || null,
+              fileName: latestResume.fileName || "",
+              fileSize: latestResume.fileSize || 0,
+              fileUrl: latestResume.fileUrl || null,
+              isActive: Boolean(latestResume.isActive),
+              createdAt: latestResume.createdAt || null,
+            }
+          : null,
+        profileStrength: {
+          score: profileStrength?.score || 0,
+          total: profileStrength?.total || 9,
+          percentage: profileStrength?.percentage || 0,
+          filledFields: profileStrength?.filledFields || [],
+          missingFields: profileStrength?.missingFields || [],
+        },
+        readiness: {
+          percent: readiness?.percent || 0,
+          completed: readiness?.completed || [],
+          missing: readiness?.missing || [],
+        },
+      };
 
-  // Calculate separate Profile Strength (9 fields) and Portfolio Readiness (6 checks)
-  const profileStrength = calculateProfileStrength(userProfile);
-  const readiness = calculateReadiness({
-    user: userProfile,
-    resumesCount,
-    skillsCount,
-    projectsCount,
-    primaryPortfolio,
-  });
+      // Store in memory cache with current timestamp
+      summaryCache.set(userId, {
+        timestamp: Date.now(),
+        data: result,
+      });
 
-  return {
-    counts: {
-      portfolios: portfoliosCount || 0,
-      resumes: resumesCount || 0,
-      projects: projectsCount || 0,
-      skills: skillsCount || 0,
-    },
-    analytics: {
-      views: analyticsViewsCount || 0,
-      downloads: 0, // Explicitly 0 until download counter is implemented
-      uniqueVisitors: uniqueVisitors || 0,
-      last7Days: Array.isArray(last7Days) ? last7Days : [],
-    },
-    primaryPortfolio: primaryPortfolio
-      ? {
-          id: primaryPortfolio.id || null,
-          title: primaryPortfolio.title || "",
-          slug: primaryPortfolio.slug || "",
-          publicUrl: primaryPortfolio.slug ? `/${primaryPortfolio.slug}` : "",
-          status: primaryPortfolio.status || "DRAFT",
-          isPublished: primaryPortfolio.status === "PUBLISHED",
-          theme: primaryPortfolio.theme || null,
-          updatedAt: primaryPortfolio.updatedAt || null,
-        }
-      : null,
-    latestResume: latestResume
-      ? {
-          id: latestResume.id || null,
-          fileName: latestResume.fileName || "",
-          fileSize: latestResume.fileSize || 0,
-          fileUrl: latestResume.fileUrl || null,
-          isActive: Boolean(latestResume.isActive),
-          createdAt: latestResume.createdAt || null,
-        }
-      : null,
-    profileStrength: {
-      score: profileStrength?.score || 0,
-      total: profileStrength?.total || 9,
-      percentage: profileStrength?.percentage || 0,
-      filledFields: profileStrength?.filledFields || [],
-      missingFields: profileStrength?.missingFields || [],
-    },
-    readiness: {
-      percent: readiness?.percent || 0,
-      completed: readiness?.completed || [],
-      missing: readiness?.missing || [],
-    },
-  };
+      return result;
+    } finally {
+      inFlightRequests.delete(userId);
+    }
+  })();
+
+  inFlightRequests.set(userId, fetchPromise);
+  return fetchPromise;
 };
 
 export default {
@@ -398,4 +476,5 @@ export default {
   calculateReadiness,
   extractSkillsFromPortfolioContent,
   getDashboardSummaryForUser,
+  invalidateDashboardSummaryCache,
 };
