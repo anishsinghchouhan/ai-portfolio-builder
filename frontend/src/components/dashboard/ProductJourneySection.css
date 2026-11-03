@@ -1,0 +1,225 @@
+/* Product Journey Stepper Stylesheet */
+@import "../../styles/variables.css";
+
+.product-journey-section-root {
+  margin-bottom: 2.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.journey-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.journey-title-group h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.journey-title-group p {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.btn-journey-info-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-journey-info-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.journey-explanation-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.journey-explanation-card ul {
+  margin: 8px 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.journey-explanation-card li strong {
+  color: #ffffff;
+}
+
+/* Stepper <ol> Grid */
+.journey-stepper-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.journey-step-item {
+  display: flex;
+  position: relative;
+}
+
+.step-card-content {
+  width: 100%;
+  border-radius: 16px;
+  padding: 1.15rem;
+  background: rgba(17, 24, 39, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.step-card-content.interactive {
+  cursor: pointer;
+}
+
+.step-card-content.interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+.step-card-content.interactive:focus-visible {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.step-card-content.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.4);
+  border-style: dashed;
+}
+
+/* Status variants */
+.journey-step-item.current .step-card-content {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(17, 24, 39, 0.9));
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 8px 20px rgba(99, 102, 241, 0.15);
+}
+
+.journey-step-item.done .step-card-content {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.step-indicator-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step-number-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.journey-step-item.current .step-number-pill {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.journey-step-item.done .step-number-pill {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.step-main-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.step-icon-badge {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.step-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.step-label-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.step-hint-text {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.step-cta-hint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #818cf8;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.journey-step-item.done .step-cta-hint {
+  color: #34d399;
+}
+
+/* Mobile & Tablet Responsiveness: Vertical Stepper */
+@media (max-width: 1024px) {
+  .journey-stepper-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .journey-stepper-list {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}

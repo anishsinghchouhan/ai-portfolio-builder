@@ -6,6 +6,8 @@ import PortfolioStatusWidget from "../../components/dashboard/PortfolioStatusWid
 import RecentActivitySection from "../../components/dashboard/RecentActivitySection";
 import AISuggestionsPanel from "../../components/dashboard/AISuggestionsPanel";
 import CreatePortfolioModal from "../../components/dashboard/CreatePortfolioModal";
+import RecentPortfoliosSection from "../../components/dashboard/RecentPortfoliosSection";
+import ProductJourneySection from "../../components/dashboard/ProductJourneySection";
 import { useAuth } from "../../hooks/useAuth";
 import { useSummary } from "../../hooks/useSummary";
 import { ROUTES, getBuilderPath, getThemesPath, getPublishPath } from "../../constants/routes";
@@ -178,7 +180,19 @@ export const DashboardHomePage = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* DEDICATED AI SUGGESTIONS PANEL */}
+      {/* "YOUR JOURNEY" STEPPER SECTION */}
+      <ProductJourneySection
+        journey={summary?.journey}
+        onCreatePortfolio={() => setIsCreateModalOpen(true)}
+      />
+
+      {/* YOUR PORTFOLIOS SECTION */}
+      <RecentPortfoliosSection
+        portfolios={summary?.recentPortfolios}
+        onCreateClick={() => setIsCreateModalOpen(true)}
+      />
+
+      {/* PORTFOLIO OPTIMIZATION COACH PANEL */}
       <AISuggestionsPanel
         profileStrength={summary?.profileStrength}
         resume={summary?.latestResume}
