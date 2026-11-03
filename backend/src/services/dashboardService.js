@@ -3,7 +3,7 @@ import prisma from "../config/prisma.js";
 import env from "../config/env.js";
 
 /**
- * Generate privacy-preserving salted SHA-256 visitor hash
+ * Generate privacy-preserving salted SHA-256 visitor hash.
  * Never stores or returns raw IP addresses.
  *
  * @param {string} ip - Client IP address
@@ -12,7 +12,10 @@ import env from "../config/env.js";
  */
 export const generateVisitorHash = (ip, userAgent) => {
   if (!ip && !userAgent) return null;
-  const salt = env.ANALYTICS_SALT || "portfolio_ai_analytics_salt_secure_2026";
+  const salt = env.ANALYTICS_SALT;
+  if (!salt) {
+    throw new Error("ANALYTICS_SALT is not configured in backend environment.");
+  }
   return crypto
     .createHash("sha256")
     .update(`${ip || ""}-${userAgent || ""}-${salt}`)
@@ -107,13 +110,15 @@ export const extractSkillsFromPortfolioContent = (content) => {
 };
 
 /**
- * Calculate Portfolio Readiness based on 6 real production verification checks:
+ * Calculate Portfolio Readiness based on 6 real verification checks:
  * 1. Profile filled (fullName and bio/headline)
  * 2. PDF Resume uploaded
  * 3. At least 1 skill in saved portfolio content
  * 4. At least 1 project created
- * 5. Theme chosen (theme is not null)
+ * 5. Theme customized (content.themeConfig exists)
  * 6. Portfolio published
+ *
+ * All routes point to valid parameterized routes or the create-portfolio action.
  *
  * @param {object} params
  * @returns {object} { percent, completed, missing }
@@ -139,28 +144,28 @@ export const calculateReadiness = ({ user, resumesCount, skillsCount, projectsCo
       label: `${skillsCount} Technical Skill${skillsCount === 1 ? "" : "s"} Saved`,
       isComplete: skillsCount > 0,
       missingLabel: "Add at least 1 skill in your portfolio",
-      route: primaryPortfolio ? `/dashboard/builder?id=${primaryPortfolio.id}` : "/dashboard/builder",
+      route: primaryPortfolio ? `/dashboard/builder/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
     },
     {
       key: "project_added",
       label: `${projectsCount} Showcase Project${projectsCount === 1 ? "" : "s"} Created`,
       isComplete: projectsCount > 0,
       missingLabel: "Add at least 1 showcase project",
-      route: primaryPortfolio ? `/dashboard/builder?id=${primaryPortfolio.id}` : "/dashboard/builder",
+      route: primaryPortfolio ? `/dashboard/builder/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
     },
     {
       key: "theme_chosen",
-      label: `Portfolio Theme Chosen (${primaryPortfolio?.theme || "Custom"})`,
-      isComplete: Boolean(primaryPortfolio?.theme),
-      missingLabel: "Select a design theme",
-      route: primaryPortfolio ? `/dashboard/themes?id=${primaryPortfolio.id}` : "/dashboard/themes",
+      label: "Portfolio Theme Customized",
+      isComplete: Boolean(primaryPortfolio?.content && primaryPortfolio.content.themeConfig),
+      missingLabel: "Customize your design theme",
+      route: primaryPortfolio ? `/dashboard/themes/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
     },
     {
       key: "published",
       label: "Portfolio Published to Live URL",
       isComplete: Boolean(primaryPortfolio && primaryPortfolio.status === "PUBLISHED"),
       missingLabel: "Publish your portfolio online",
-      route: primaryPortfolio ? `/dashboard/publish?id=${primaryPortfolio.id}` : "/dashboard/publish",
+      route: primaryPortfolio ? `/dashboard/publish/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
     },
   ];
 
@@ -191,13 +196,116 @@ export const calculateReadiness = ({ user, resumesCount, skillsCount, projectsCo
   };
 };
 
+/**
+ * Phase E: Compute Product Journey on the backend (Single Source of Truth)
+ * Status is strictly one of: "done" | "current" | "todo" | "coming_soon"
+ * Exactly ONE step is "current" (the first not-done, non-coming_soon step).
+ *
+ * @param {object} params
+ * @returns {Array<{ key: string, label: string, status: string, route: string, hint: string }>}
+ */
+export const calculateJourney = ({ user, primaryPortfolio, counts, profileStrength }) => {
+  const steps = [
+    {
+      key: "profile",
+      label: "Profile",
+      isDone: (profileStrength?.percentage || 0) >= 50,
+      isComingSoon: false,
+      route: "/dashboard/profile",
+      hint: "Complete at least 50% of your candidate profile details (Threshold: >= 50%)",
+    },
+    {
+      key: "resume",
+      label: "Resume",
+      isDone: false,
+      isComingSoon: true,
+      route: "/dashboard/upload",
+      hint: "PDF resume upload & ATS parsing (Coming in Round 2)",
+    },
+    {
+      key: "ai_analysis",
+      label: "AI Analysis",
+      isDone: false,
+      isComingSoon: true,
+      route: "/dashboard/upload",
+      hint: "AI portfolio recommendations & scoring (Coming in Round 2)",
+    },
+    {
+      key: "portfolio",
+      label: "Portfolio",
+      isDone: (counts?.portfolios || 0) > 0,
+      isComingSoon: false,
+      route: primaryPortfolio ? `/dashboard/builder/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
+      hint: "Create your showcase portfolio website",
+    },
+    {
+      key: "theme",
+      label: "Theme",
+      isDone: Boolean(primaryPortfolio?.content && primaryPortfolio.content.themeConfig),
+      isComingSoon: false,
+      route: primaryPortfolio ? `/dashboard/themes/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
+      hint: "Customize layout, colors, and typography",
+    },
+    {
+      key: "publish",
+      label: "Publish",
+      isDone: (counts?.published || 0) > 0 || primaryPortfolio?.status === "PUBLISHED",
+      isComingSoon: false,
+      route: primaryPortfolio ? `/dashboard/publish/${primaryPortfolio.id}` : "/dashboard?action=create-portfolio",
+      hint: "Deploy your portfolio to a live URL",
+    },
+    {
+      key: "custom_url",
+      label: "Custom URL",
+      isDone: false,
+      isComingSoon: true,
+      route: primaryPortfolio ? `/dashboard/publish/${primaryPortfolio.id}` : "/dashboard",
+      hint: "Connect your custom domain (Coming in Round 2)",
+    },
+    {
+      key: "pdf_export",
+      label: "PDF Export",
+      isDone: false,
+      isComingSoon: true,
+      route: "/dashboard",
+      hint: "Download high-res PDF portfolio (Coming in Round 2)",
+    },
+  ];
+
+  let hasFoundCurrent = false;
+
+  return steps.map((s) => {
+    let status;
+    if (s.isComingSoon) {
+      status = "coming_soon";
+    } else if (s.isDone) {
+      status = "done";
+    } else if (!hasFoundCurrent) {
+      status = "current";
+      hasFoundCurrent = true;
+    } else {
+      status = "todo";
+    }
+
+    return {
+      key: s.key,
+      label: s.label,
+      status,
+      route: s.route,
+      hint: s.hint,
+    };
+  });
+};
+
 // ─── IN-MEMORY SUMMARY CACHE (30-60s TTL keyed by userId) ───────────────────
 const summaryCache = new Map();
 const inFlightRequests = new Map();
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 /**
- * Invalidate summary cache for a specific user or clear entire cache
+ * Invalidate summary cache for a specific user or clear entire cache.
+ * Must be called after every write mutation (profile, portfolio, publish, views).
+ *
  * @param {string} [userId] - User ID to invalidate, or omit to clear all
  */
 export const invalidateDashboardSummaryCache = (userId) => {
@@ -224,8 +332,9 @@ if (typeof setInterval !== "undefined") {
  * Fetch and assemble comprehensive dashboard summary for authenticated user.
  * - Checks 60s in-memory cache first (0ms response).
  * - Coalesces concurrent in-flight requests for the same user (prevents stampedes).
- * - Combines views and unique visitors into a single SQL query.
  * - Runs all independent queries in parallel via Promise.all.
+ * - Propagates errors cleanly (no silent swallowing).
+ * - Returns recentPortfolios, counts.published, and calculated journey.
  *
  * @param {string} userId - Prisma user ID
  * @returns {Promise<object>} Clean dashboard metrics payload
@@ -251,67 +360,56 @@ export const getDashboardSummaryForUser = async (userId) => {
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
-      // Helper: Combined analytics query (views + unique visitors in ONE query)
+      // Helper: Combined analytics query (views + unique visitors in ONE query, no silent fallback)
       const fetchAnalyticsTotals = async () => {
-        try {
-          const res = await prisma.$queryRaw`
-            SELECT
-              COUNT(*)::int as "views",
-              COUNT(DISTINCT a."ipAddress")::int as "uniqueVisitors"
-            FROM "analytics" a
-            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
-            WHERE p."userId" = ${userId};
-          `;
-          if (Array.isArray(res) && res.length > 0) {
-            return {
-              views: Number(res[0].views) || 0,
-              uniqueVisitors: Number(res[0].uniqueVisitors) || 0,
-            };
-          }
-        } catch {
-          // Fallback to separate queries if $queryRaw fails
+        const res = await prisma.$queryRaw`
+          SELECT
+            COUNT(*)::int as "views",
+            COUNT(DISTINCT a."ipAddress")::int as "uniqueVisitors"
+          FROM "analytics" a
+          INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
+          WHERE p."userId" = ${userId};
+        `;
+        if (Array.isArray(res) && res.length > 0) {
+          return {
+            views: Number(res[0].views) || 0,
+            uniqueVisitors: Number(res[0].uniqueVisitors) || 0,
+          };
         }
-        const [views, distinctVisitors] = await Promise.all([
-          prisma.analytics.count({ where: { portfolio: { userId } } }).catch(() => 0),
-          prisma.analytics.groupBy({
-            by: ["ipAddress"],
-            where: { portfolio: { userId }, ipAddress: { not: null } },
-          }).then((r) => r.length).catch(() => 0),
-        ]);
-        return { views, uniqueVisitors: distinctVisitors };
+        return { views: 0, uniqueVisitors: 0 };
       };
 
-      // Helper: 7-day daily views grouping via parameterized $queryRaw
+      // Helper: 7-day daily views grouping via parameterized $queryRaw (no silent fallback)
       const fetchDailyViews = async () => {
-        try {
-          return await prisma.$queryRaw`
-            SELECT
-              DATE(a."visitedAt") as "visitDate",
-              COUNT(*)::int as "viewsCount"
-            FROM "analytics" a
-            INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
-            WHERE p."userId" = ${userId}
-              AND a."visitedAt" >= ${sevenDaysAgo}
-            GROUP BY DATE(a."visitedAt")
-            ORDER BY "visitDate" ASC;
-          `;
-        } catch {
-          return [];
-        }
+        const res = await prisma.$queryRaw`
+          SELECT
+            DATE(a."visitedAt") as "visitDate",
+            COUNT(*)::int as "viewsCount"
+          FROM "analytics" a
+          INNER JOIN "portfolios" p ON a."portfolioId" = p."id"
+          WHERE p."userId" = ${userId}
+            AND a."visitedAt" >= ${sevenDaysAgo}
+          GROUP BY DATE(a."visitedAt")
+          ORDER BY "visitDate" ASC;
+        `;
+        return Array.isArray(res) ? res : [];
       };
 
       // Parallel database calls strictly scoped by userId - ALL independent queries in ONE Promise.all
       const [
         portfoliosCount,
+        publishedCount,
         resumesCount,
         projectsCount,
         primaryPortfolio,
+        recentPortfoliosRaw,
         latestResume,
         userProfile,
         analyticsTotals,
         rawDailyViews,
       ] = await Promise.all([
         prisma.portfolio.count({ where: { userId } }),
+        prisma.portfolio.count({ where: { userId, status: "PUBLISHED" } }),
         prisma.resume.count({ where: { userId } }),
         prisma.project.count({ where: { portfolio: { userId } } }),
         prisma.portfolio.findFirst({
@@ -328,6 +426,23 @@ export const getDashboardSummaryForUser = async (userId) => {
             createdAt: true,
           },
         }),
+        prisma.portfolio.findMany({
+          where: { userId },
+          orderBy: { updatedAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            status: true,
+            theme: true,
+            viewsCount: true,
+            updatedAt: true,
+            _count: {
+              select: { projects: true },
+            },
+          },
+        }),
         prisma.resume.findFirst({
           where: { userId },
           orderBy: { createdAt: "desc" },
@@ -340,33 +455,32 @@ export const getDashboardSummaryForUser = async (userId) => {
             createdAt: true,
           },
         }),
-        prisma.user
-          .findUnique({
-            where: { id: userId },
-            select: {
-              fullName: true,
-              headline: true,
-              bio: true,
-              location: true,
-              phone: true,
-              github: true,
-              linkedin: true,
-              website: true,
-              avatarUrl: true,
-            },
-          })
-          .catch(() =>
-            prisma.user.findUnique({
-              where: { id: userId },
-              select: {
-                fullName: true,
-                avatarUrl: true,
-              },
-            })
-          ),
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            fullName: true,
+            headline: true,
+            bio: true,
+            location: true,
+            phone: true,
+            github: true,
+            linkedin: true,
+            website: true,
+            avatarUrl: true,
+          },
+        }),
         fetchAnalyticsTotals(),
         fetchDailyViews(),
       ]);
+
+      // Format recent portfolios with projectsCount (zero N+1)
+      const recentPortfolios = (recentPortfoliosRaw || []).map((p) => {
+        const { _count, ...rest } = p;
+        return {
+          ...rest,
+          projectsCount: _count?.projects || 0,
+        };
+      });
 
       // Extract skills strictly from the primary portfolio's saved content
       const skillsList = primaryPortfolio ? extractSkillsFromPortfolioContent(primaryPortfolio.content) : [];
@@ -405,16 +519,26 @@ export const getDashboardSummaryForUser = async (userId) => {
         primaryPortfolio,
       });
 
+      const counts = {
+        portfolios: portfoliosCount || 0,
+        published: publishedCount || 0,
+        resumes: resumesCount || 0,
+        projects: projectsCount || 0,
+        skills: skillsCount || 0,
+      };
+
+      // Calculate product journey (Phase E)
+      const journey = calculateJourney({
+        user: userProfile,
+        primaryPortfolio,
+        counts,
+        profileStrength,
+      });
+
       const result = {
-        counts: {
-          portfolios: portfoliosCount || 0,
-          resumes: resumesCount || 0,
-          projects: projectsCount || 0,
-          skills: skillsCount || 0,
-        },
+        counts,
         analytics: {
           views: analyticsTotals?.views || 0,
-          downloads: 0, // Explicitly 0 until download counter is implemented
           uniqueVisitors: analyticsTotals?.uniqueVisitors || 0,
           last7Days: Array.isArray(last7Days) ? last7Days : [],
         },
@@ -430,6 +554,7 @@ export const getDashboardSummaryForUser = async (userId) => {
               updatedAt: primaryPortfolio.updatedAt || null,
             }
           : null,
+        recentPortfolios,
         latestResume: latestResume
           ? {
               id: latestResume.id || null,
@@ -452,9 +577,10 @@ export const getDashboardSummaryForUser = async (userId) => {
           completed: readiness?.completed || [],
           missing: readiness?.missing || [],
         },
+        journey,
       };
 
-      // Store in memory cache with current timestamp
+      // Store in memory cache with current timestamp ONLY on successful retrieval
       summaryCache.set(userId, {
         timestamp: Date.now(),
         data: result,
@@ -474,6 +600,7 @@ export default {
   generateVisitorHash,
   calculateProfileStrength,
   calculateReadiness,
+  calculateJourney,
   extractSkillsFromPortfolioContent,
   getDashboardSummaryForUser,
   invalidateDashboardSummaryCache,

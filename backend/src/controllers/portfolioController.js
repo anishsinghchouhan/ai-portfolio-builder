@@ -1,6 +1,8 @@
 import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
+import { supabaseAdmin } from "../middleware/authMiddleware.js";
+import { invalidateDashboardSummaryCache, generateVisitorHash } from "../services/dashboardService.js";
 
 export const RESERVED_SLUGS = [
   "login",
@@ -73,15 +75,36 @@ export const getPortfolios = catchAsync(async (req, res, next) => {
   const userPortfolios = await prisma.portfolio.findMany({
     where: { userId: dbUser.id },
     orderBy: { updatedAt: "desc" },
-    include: {
-      projects: true,
+    select: {
+      id: true,
+      userId: true,
+      title: true,
+      slug: true,
+      theme: true,
+      status: true,
+      content: true,
+      viewsCount: true,
+      publishedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: {
+        select: { projects: true },
+      },
     },
+  });
+
+  const formatted = userPortfolios.map((p) => {
+    const { _count, ...rest } = p;
+    return {
+      ...rest,
+      projectsCount: _count?.projects || 0,
+    };
   });
 
   res.status(200).json({
     success: true,
-    results: userPortfolios.length,
-    data: userPortfolios,
+    results: formatted.length,
+    data: formatted,
   });
 });
 
@@ -163,6 +186,8 @@ export const createPortfolio = catchAsync(async (req, res, next) => {
       },
     });
 
+    invalidateDashboardSummaryCache(dbUser.id);
+
     res.status(201).json({
       success: true,
       message: "Portfolio created successfully",
@@ -197,6 +222,11 @@ export const updatePortfolio = catchAsync(async (req, res, next) => {
 
   const { title, theme, content, status } = req.body;
 
+  // Strict status validation: must be one of DRAFT, PUBLISHED, ARCHIVED if provided
+  if (status !== undefined && !["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)) {
+    return next(new AppError("Invalid status value. Must be DRAFT, PUBLISHED, or ARCHIVED.", 400, "BAD_REQUEST"));
+  }
+
   try {
     const updatedPortfolio = await prisma.portfolio.update({
       where: { id },
@@ -204,9 +234,11 @@ export const updatePortfolio = catchAsync(async (req, res, next) => {
         ...(title && { title: title.trim() }),
         ...(theme && { theme }),
         ...(content && { content }),
-        ...(status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status) && { status }),
+        ...(status && { status }),
       },
     });
+
+    invalidateDashboardSummaryCache(dbUser.id);
 
     res.status(200).json({
       success: true,
@@ -238,6 +270,8 @@ export const deletePortfolio = catchAsync(async (req, res, next) => {
   }
 
   await prisma.portfolio.delete({ where: { id } });
+
+  invalidateDashboardSummaryCache(dbUser.id);
 
   res.status(200).json({
     success: true,
@@ -272,6 +306,8 @@ export const publishPortfolio = catchAsync(async (req, res, next) => {
     },
   });
 
+  invalidateDashboardSummaryCache(dbUser.id);
+
   res.status(200).json({
     success: true,
     message: "Portfolio published successfully",
@@ -282,6 +318,7 @@ export const publishPortfolio = catchAsync(async (req, res, next) => {
 /**
  * GET /api/v1/public/portfolios/:slug
  * Public endpoint to fetch published portfolio by slug
+ * Records verified visitor view into Analytics with salted SHA-256 hash (never raw IP)
  */
 export const getPublicPortfolioBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
@@ -297,16 +334,63 @@ export const getPublicPortfolioBySlug = catchAsync(async (req, res, next) => {
     return next(new AppError("Published portfolio not found.", 404, "NOT_FOUND"));
   }
 
-  const updatedPortfolio = await prisma.portfolio.update({
-    where: { id: portfolio.id },
-    data: {
-      viewsCount: { increment: 1 },
-    },
-  });
+  // Detect if the viewer is the portfolio owner to avoid inflating own views
+  let isOwner = false;
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const { data } = await supabaseAdmin.auth.getUser(token);
+      if (data?.user) {
+        const viewer = await prisma.user.findUnique({
+          where: { supabaseUserId: data.user.id },
+          select: { id: true },
+        });
+        if (viewer && viewer.id === portfolio.userId) {
+          isOwner = true;
+        }
+      }
+    }
+  } catch {
+    isOwner = false;
+  }
+
+  let finalViewsCount = portfolio.viewsCount;
+
+  if (!isOwner) {
+    const clientIp = req.ip || req.headers["x-forwarded-for"] || "";
+    const userAgent = req.headers["user-agent"] || "";
+    const visitorHash = generateVisitorHash(clientIp, userAgent);
+
+    // Record verified visitor hash into analytics (never raw IP)
+    await prisma.analytics.create({
+      data: {
+        portfolioId: portfolio.id,
+        ipAddress: visitorHash,
+        userAgent: userAgent ? userAgent.slice(0, 255) : null,
+      },
+    });
+
+    const updatedPortfolio = await prisma.portfolio.update({
+      where: { id: portfolio.id },
+      data: {
+        viewsCount: { increment: 1 },
+      },
+      include: {
+        projects: true,
+      },
+    });
+
+    finalViewsCount = updatedPortfolio.viewsCount;
+    invalidateDashboardSummaryCache(portfolio.userId);
+  }
 
   res.status(200).json({
     success: true,
-    data: updatedPortfolio,
+    data: {
+      ...portfolio,
+      viewsCount: finalViewsCount,
+    },
   });
 });
 

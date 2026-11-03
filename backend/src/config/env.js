@@ -20,6 +20,7 @@ const envSchema = z
     SUPABASE_URL: z.string().min(1, "SUPABASE_URL is required"),
     SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
+    ANALYTICS_SALT: z.string().min(16, "ANALYTICS_SALT must be at least 16 characters").optional(),
     GEMINI_API_KEY: z.string().optional(),
   })
   .refine(
@@ -33,6 +34,19 @@ const envSchema = z
     {
       message: "CORS_ORIGIN is strictly required in production mode",
       path: ["CORS_ORIGIN"],
+    }
+  )
+  .refine(
+    (data) => {
+      // In production mode, ANALYTICS_SALT is strictly required
+      if (data.NODE_ENV === "production") {
+        return Boolean(data.ANALYTICS_SALT && data.ANALYTICS_SALT.trim().length >= 16);
+      }
+      return true;
+    },
+    {
+      message: "ANALYTICS_SALT is strictly required in production mode (min 16 chars)",
+      path: ["ANALYTICS_SALT"],
     }
   );
 
@@ -48,10 +62,11 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-// In development, default CORS_ORIGIN to localhost Vite dev server if omitted
+// In development, default CORS_ORIGIN and ANALYTICS_SALT if omitted
 const validatedEnv = {
   ...parsed.data,
   CORS_ORIGIN: parsed.data.CORS_ORIGIN || "http://localhost:5173",
+  ANALYTICS_SALT: parsed.data.ANALYTICS_SALT || "portfolio_ai_analytics_salt_secure_2026",
 };
 
 export const env = validatedEnv;

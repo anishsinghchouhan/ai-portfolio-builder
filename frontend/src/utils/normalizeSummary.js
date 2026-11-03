@@ -9,16 +9,17 @@
 export const normalizeSummary = (raw) => {
   const data = raw && typeof raw === "object" ? raw : {};
 
-  // 1. Counts: portfolios, resumes, projects, skills
+  // 1. Counts: portfolios, published, resumes, projects, skills
   const counts = data.counts && typeof data.counts === "object" ? data.counts : {};
   const normalizedCounts = {
     portfolios: Number.isFinite(counts.portfolios) ? Math.max(0, counts.portfolios) : 0,
+    published: Number.isFinite(counts.published) ? Math.max(0, counts.published) : 0,
     resumes: Number.isFinite(counts.resumes) ? Math.max(0, counts.resumes) : 0,
     projects: Number.isFinite(counts.projects) ? Math.max(0, counts.projects) : 0,
     skills: Number.isFinite(counts.skills) ? Math.max(0, counts.skills) : 0,
   };
 
-  // 2. Analytics: views, downloads, uniqueVisitors, last7Days
+  // 2. Analytics: views, uniqueVisitors, last7Days
   const analytics = data.analytics && typeof data.analytics === "object" ? data.analytics : {};
   const last7DaysRaw = Array.isArray(analytics.last7Days) ? analytics.last7Days : [];
 
@@ -47,7 +48,7 @@ export const normalizeSummary = (raw) => {
 
   const normalizedAnalytics = {
     views: Number.isFinite(analytics.views) ? Math.max(0, analytics.views) : 0,
-    downloads: Number.isFinite(analytics.downloads) ? Math.max(0, analytics.downloads) : 0,
+    downloads: 0, // Legacy fallback
     uniqueVisitors: Number.isFinite(analytics.uniqueVisitors) ? Math.max(0, analytics.uniqueVisitors) : 0,
     last7Days: normalizedLast7Days,
   };
@@ -68,7 +69,21 @@ export const normalizeSummary = (raw) => {
     };
   }
 
-  // 4. Latest Resume: null or object
+  // 4. Recent Portfolios: array of up to 5 portfolios
+  const recentPortfolios = Array.isArray(data.recentPortfolios)
+    ? data.recentPortfolios.map((p) => ({
+        id: String(p?.id || ""),
+        title: typeof p?.title === "string" ? p.title.trim() : "Untitled Portfolio",
+        slug: typeof p?.slug === "string" ? p.slug.trim() : "",
+        status: typeof p?.status === "string" ? p.status : "DRAFT",
+        theme: typeof p?.theme === "string" ? p.theme : "dark-glass",
+        updatedAt: p?.updatedAt ? String(p.updatedAt) : null,
+        viewsCount: Number.isFinite(p?.viewsCount) ? Math.max(0, p.viewsCount) : 0,
+        projectsCount: Number.isFinite(p?.projectsCount) ? Math.max(0, p.projectsCount) : 0,
+      }))
+    : [];
+
+  // 5. Latest Resume: null or object
   let normalizedResume = null;
   if (data.latestResume && typeof data.latestResume === "object" && data.latestResume.id) {
     const r = data.latestResume;
@@ -82,7 +97,7 @@ export const normalizeSummary = (raw) => {
     };
   }
 
-  // 5. Profile Strength: score, total, percentage, filledFields, missingFields
+  // 6. Profile Strength: score, total, percentage, filledFields, missingFields
   const ps = data.profileStrength && typeof data.profileStrength === "object" ? data.profileStrength : {};
   const normalizedProfileStrength = {
     score: Number.isFinite(ps.score) ? Math.max(0, ps.score) : 0,
@@ -92,7 +107,7 @@ export const normalizeSummary = (raw) => {
     missingFields: Array.isArray(ps.missingFields) ? ps.missingFields : [],
   };
 
-  // 6. Portfolio Readiness: percent, completed, missing
+  // 7. Portfolio Readiness: percent, completed, missing
   const rd = data.readiness && typeof data.readiness === "object" ? data.readiness : {};
   const normalizedReadiness = {
     percent: Number.isFinite(rd.percent) ? Math.min(100, Math.max(0, Math.round(rd.percent))) : 0,
@@ -100,13 +115,26 @@ export const normalizeSummary = (raw) => {
     missing: Array.isArray(rd.missing) ? rd.missing : [],
   };
 
+  // 8. Product Journey (Phase E)
+  const journey = Array.isArray(data.journey)
+    ? data.journey.map((step) => ({
+        key: String(step?.key || ""),
+        label: String(step?.label || ""),
+        status: ["done", "current", "todo", "coming_soon"].includes(step?.status) ? step.status : "todo",
+        route: String(step?.route || "/dashboard"),
+        hint: String(step?.hint || ""),
+      }))
+    : [];
+
   return {
     counts: normalizedCounts,
     analytics: normalizedAnalytics,
     primaryPortfolio: normalizedPortfolio,
+    recentPortfolios,
     latestResume: normalizedResume,
     profileStrength: normalizedProfileStrength,
     readiness: normalizedReadiness,
+    journey,
   };
 };
 
