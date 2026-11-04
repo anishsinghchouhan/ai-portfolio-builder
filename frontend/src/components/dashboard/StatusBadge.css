@@ -66,6 +66,8 @@
 }
 
 /* Light Theme Overrides */
+[data-dashboard-theme="light"] .badge-published,
+[data-dashboard-theme="light"] .badge-done,
 .dashboard-root.light .badge-published,
 .dashboard-root.light .badge-done {
   background: #dcfce7;
@@ -73,30 +75,35 @@
   border: 1px solid #86efac;
 }
 
+[data-dashboard-theme="light"] .badge-draft,
 .dashboard-root.light .badge-draft {
   background: #fef9c3;
   color: #854d0e;
   border: 1px solid #fde047;
 }
 
+[data-dashboard-theme="light"] .badge-archived,
 .dashboard-root.light .badge-archived {
   background: #f1f5f9;
   color: #475569;
   border: 1px solid #cbd5e1;
 }
 
+[data-dashboard-theme="light"] .badge-current,
 .dashboard-root.light .badge-current {
   background: #eef2ff;
   color: #4338ca;
   border: 1px solid #a5b4fc;
 }
 
+[data-dashboard-theme="light"] .badge-todo,
 .dashboard-root.light .badge-todo {
   background: #f8fafc;
   color: #475569;
   border: 1px solid #e2e8f0;
 }
 
+[data-dashboard-theme="light"] .badge-coming-soon,
 .dashboard-root.light .badge-coming-soon {
   background: #f1f5f9;
   color: #334155;
@@ -104,6 +111,7 @@
   font-weight: 700;
 }
 
+[data-dashboard-theme="light"] .badge-neutral,
 .dashboard-root.light .badge-neutral {
   background: #f8fafc;
   color: #334155;

@@ -370,3 +370,8 @@
 .dashboard-root.light .user-name-text {
   color: #0F172A;
 }
+
+[data-dashboard-theme="light"] .user-role-text,
+.dashboard-root.light .user-role-text {
+  color: #64748B;
+}

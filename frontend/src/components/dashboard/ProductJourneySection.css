@@ -217,95 +217,115 @@
 }
 
 /* ==========================================================================
-   Light Theme Support
+   Dashboard Light Theme Support (Strict White Cards, Clean Contrast)
    ========================================================================== */
+[data-dashboard-theme="light"] .journey-title-group h2,
 .dashboard-root.light .journey-title-group h2 {
-  color: var(--color-text-primary, #0F172A);
+  color: #0F172A;
 }
 
+[data-dashboard-theme="light"] .journey-title-group p,
 .dashboard-root.light .journey-title-group p {
-  color: var(--color-text-secondary, #475569);
+  color: #475569;
 }
 
+[data-dashboard-theme="light"] .btn-journey-info-toggle,
 .dashboard-root.light .btn-journey-info-toggle {
-  background: var(--color-surface, #F8FAFC);
-  border-color: var(--color-border, #E2E8F0);
-  color: var(--color-text-secondary, #475569);
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #334155;
 }
 
+[data-dashboard-theme="light"] .btn-journey-info-toggle:hover,
 .dashboard-root.light .btn-journey-info-toggle:hover {
   background: #FFFFFF;
-  border-color: var(--color-primary, #4F46E5);
-  color: var(--color-primary, #4F46E5);
+  border-color: #CBD5E1;
+  color: #0F172A;
 }
 
+[data-dashboard-theme="light"] .journey-explanation-card,
 .dashboard-root.light .journey-explanation-card {
   background: #FFFFFF;
-  border-color: var(--color-border, #E2E8F0);
-  color: var(--color-text-primary, #0F172A);
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
+  border-color: #E2E8F0;
+  color: #0F172A;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
 }
 
+[data-dashboard-theme="light"] .journey-explanation-card li strong,
 .dashboard-root.light .journey-explanation-card li strong {
-  color: var(--color-text-primary, #0F172A);
+  color: #0F172A;
 }
 
+[data-dashboard-theme="light"] .step-card-content,
 .dashboard-root.light .step-card-content {
-  background: var(--color-card, #FFFFFF);
-  border-color: var(--color-border, #E2E8F0);
-  box-shadow: var(--shadow-card, 0 2px 6px rgba(15, 23, 42, 0.06));
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
 }
 
+[data-dashboard-theme="light"] .step-card-content.interactive:hover,
 .dashboard-root.light .step-card-content.interactive:hover {
-  border-color: var(--color-primary, #4F46E5);
-  box-shadow: var(--shadow-lg, 0 8px 24px rgba(15, 23, 42, 0.10));
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  transform: translateY(-3px);
 }
 
+[data-dashboard-theme="light"] .step-card-content.disabled,
 .dashboard-root.light .step-card-content.disabled {
-  background: var(--color-surface, #F8FAFC);
-  border-color: var(--color-border-strong, #CBD5E1);
+  background: #F8FAFC;
+  border-color: #E2E8F0;
 }
 
+[data-dashboard-theme="light"] .journey-step-item.current .step-card-content,
 .dashboard-root.light .journey-step-item.current .step-card-content {
-  border-color: var(--color-primary, #4F46E5);
-  background: linear-gradient(135deg, var(--color-primary-subtle, #EEF2FF), #FFFFFF);
-  box-shadow: 0 0 0 1px var(--color-primary, #4F46E5), var(--shadow-md, 0 4px 8px rgba(79, 70, 229, 0.1));
+  border-color: #4F46E5;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 1px #4F46E5, 0 8px 20px rgba(79, 70, 229, 0.12);
 }
 
+[data-dashboard-theme="light"] .journey-step-item.done .step-card-content,
 .dashboard-root.light .journey-step-item.done .step-card-content {
-  border-color: var(--color-success, #16A34A);
+  border-color: #16A34A;
 }
 
+[data-dashboard-theme="light"] .step-number-pill,
 .dashboard-root.light .step-number-pill {
-  background: var(--color-border, #E2E8F0);
-  color: var(--color-text-secondary, #475569);
+  background: #F1F5F9;
+  color: #475569;
 }
 
+[data-dashboard-theme="light"] .journey-step-item.current .step-number-pill,
 .dashboard-root.light .journey-step-item.current .step-number-pill {
-  background: var(--color-primary, #4F46E5);
+  background: #4F46E5;
   color: #FFFFFF;
 }
 
+[data-dashboard-theme="light"] .journey-step-item.done .step-number-pill,
 .dashboard-root.light .journey-step-item.done .step-number-pill {
-  background: var(--color-success, #16A34A);
+  background: #16A34A;
   color: #FFFFFF;
 }
 
+[data-dashboard-theme="light"] .step-label-title,
 .dashboard-root.light .step-label-title {
-  color: var(--color-text-primary, #0F172A);
+  color: #0F172A;
 }
 
+[data-dashboard-theme="light"] .step-hint-text,
 .dashboard-root.light .step-hint-text {
-  color: var(--color-text-secondary, #475569);
+  color: #475569;
 }
 
+[data-dashboard-theme="light"] .step-cta-hint,
 .dashboard-root.light .step-cta-hint {
-  color: var(--color-primary, #4F46E5);
-  border-top-color: var(--color-border, #E2E8F0);
+  color: #4F46E5;
+  border-top-color: #E2E8F0;
 }
 
+[data-dashboard-theme="light"] .journey-step-item.done .step-cta-hint,
 .dashboard-root.light .journey-step-item.done .step-cta-hint {
-  color: var(--color-success, #16A34A);
+  color: #16A34A;
 }
 
 /* Mobile & Tablet Responsiveness: Vertical Stepper */

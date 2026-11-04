@@ -535,6 +535,30 @@
   color: #64748b;
 }
 
+[data-dashboard-theme="light"] .welcome-date-label,
+.dashboard-root.light .welcome-date-label {
+  color: #64748B;
+}
+
+[data-dashboard-theme="light"] .welcome-next-step-hint,
+.dashboard-root.light .welcome-next-step-hint {
+  color: #475569;
+}
+
+[data-dashboard-theme="light"] .btn-view-public-page,
+.dashboard-root.light .btn-view-public-page {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .btn-view-public-page:hover,
+.dashboard-root.light .btn-view-public-page:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
 .live-status-pill {
   display: inline-flex;
   align-items: center;

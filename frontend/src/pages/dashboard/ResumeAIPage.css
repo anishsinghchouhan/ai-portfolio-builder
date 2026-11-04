@@ -813,6 +813,35 @@
 }
 
 /* Light Theme Overrides (using standard variables) */
+[data-dashboard-theme="light"] .ai-metric-card,
+[data-dashboard-theme="light"] .resume-dropzone-card,
+[data-dashboard-theme="light"] .ai-summary-card,
+[data-dashboard-theme="light"] .extracted-studio-card,
+[data-dashboard-theme="light"] .resumes-history-card,
+.dashboard-root.light .ai-metric-card,
+.dashboard-root.light .resume-dropzone-card,
+.dashboard-root.light .ai-summary-card,
+.dashboard-root.light .extracted-studio-card,
+.dashboard-root.light .resumes-history-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+[data-dashboard-theme="light"] .ai-summary-textarea,
+[data-dashboard-theme="light"] .info-input-field,
+[data-dashboard-theme="light"] .skill-tag-pill,
+[data-dashboard-theme="light"] .experience-card-item,
+[data-dashboard-theme="light"] .history-item-row,
+.dashboard-root.light .ai-summary-textarea,
+.dashboard-root.light .info-input-field,
+.dashboard-root.light .skill-tag-pill,
+.dashboard-root.light .experience-card-item,
+.dashboard-root.light .history-item-row {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
 .dashboard-root.light .resume-ai-title-group h1 {
   color: var(--dash-text, #0f172a);
 }
