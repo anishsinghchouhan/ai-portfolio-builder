@@ -33,7 +33,7 @@ export const Sidebar = ({
 
   const menuSections = [
     {
-      title: "Main Menu",
+      title: "Navigation",
       items: [
         {
           id: "dashboard",
@@ -49,7 +49,7 @@ export const Sidebar = ({
         },
         {
           id: "portfolio",
-          label: "Portfolio",
+          label: "Portfolios",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -59,22 +59,8 @@ export const Sidebar = ({
           ),
         },
         {
-          id: "resume",
-          label: "Resume & AI",
-          icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          ),
-        },
-        {
           id: "templates",
           label: "Templates",
-          badge: "NEW",
-          badgeType: "new",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -91,6 +77,31 @@ export const Sidebar = ({
               <line x1="18" y1="20" x2="18" y2="10" />
               <line x1="12" y1="20" x2="12" y2="4" />
               <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          ),
+        },
+        {
+          id: "profile",
+          label: "Profile",
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          ),
+        },
+        {
+          id: "resume",
+          label: "Resume & AI",
+          disabled: true,
+          badge: "Soon",
+          badgeType: "soon",
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           ),
         },
@@ -112,6 +123,7 @@ export const Sidebar = ({
         {
           id: "billing",
           label: "Billing",
+          disabled: true,
           badge: "Coming soon",
           badgeType: "neutral",
           icon: (
@@ -124,6 +136,9 @@ export const Sidebar = ({
         {
           id: "help",
           label: "Help Center",
+          disabled: true,
+          badge: "Coming soon",
+          badgeType: "neutral",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -136,8 +151,9 @@ export const Sidebar = ({
     },
   ];
 
-  const handleItemClick = (id) => {
-    if (onSelectMenuItem) onSelectMenuItem(id);
+  const handleItemClick = (item) => {
+    if (item.disabled) return;
+    if (onSelectMenuItem) onSelectMenuItem(item.id);
   };
 
   const handleLogoutClick = async (e) => {
@@ -188,16 +204,17 @@ export const Sidebar = ({
             {section.items.map((item) => (
               <div
                 key={item.id}
-                className={`sidebar-nav-item ${activeItem === item.id ? "active" : ""}`}
+                className={`sidebar-nav-item ${activeItem === item.id ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
               >
                 <a
                   href={`#${item.id}`}
                   className="sidebar-nav-link"
+                  aria-disabled={item.disabled ? "true" : undefined}
                   onClick={(e) => {
                     e.preventDefault();
-                    handleItemClick(item.id);
+                    handleItemClick(item);
                   }}
-                  title={item.label}
+                  title={item.disabled ? `${item.label} (Coming soon)` : item.label}
                 >
                   <div className="nav-item-icon">{item.icon}</div>
                   <span>{item.label}</span>
