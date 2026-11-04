@@ -15,6 +15,7 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
   const [portfolio, setPortfolio] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -140,10 +141,14 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
         content: updatedContent,
       });
 
-      if (onSave) onSave(formData);
-      else alert("Section content saved successfully to database!");
+      if (onSave) {
+        onSave(formData);
+      } else {
+        setFeedback({ type: "success", text: "Section content saved successfully to database!" });
+        setTimeout(() => setFeedback(null), 4000);
+      }
     } catch (err) {
-      alert(`Failed to save section content: ${err.message}`);
+      setFeedback({ type: "error", text: `Failed to save section content: ${err.message}` });
     } finally {
       setIsSaving(false);
     }
@@ -222,6 +227,27 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
           <span>{isSaving ? "Saving..." : "Save Changes"}</span>
         </button>
       </div>
+
+      {feedback && (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          style={{
+            padding: "10px 18px",
+            borderRadius: "10px",
+            marginBottom: "1.25rem",
+            fontSize: "0.9rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: feedback.type === "error" ? "rgba(239, 68, 68, 0.15)" : "rgba(82, 224, 163, 0.15)",
+            border: `1px solid ${feedback.type === "error" ? "rgba(239, 68, 68, 0.35)" : "rgba(82, 224, 163, 0.35)"}`,
+            color: feedback.type === "error" ? "#fca5a5" : "var(--color-success, #52E0A3)",
+          }}
+        >
+          <span>{feedback.type === "error" ? "⚠️" : "✓"}</span>
+          <span>{feedback.text}</span>
+        </div>
+      )}
 
       {/* Section Selector Tabs Bar */}
       <div className="section-tabs-bar">

@@ -5,7 +5,7 @@ import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import { getBuilderPath } from "../../constants/routes";
 import "./TemplatesMarketplacePage.css";
 
-export const TemplatesMarketplacePage = ({ onUseTemplate, onBack }) => {
+export const TemplatesMarketplacePage = ({ onUseTemplate, _onBack }) => {
   const navigate = useNavigate();
   const { theme } = useDashboardTheme();
   const [searchQuery, setSearchQuery] = useState("");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { authStore } from "../../store/authSlice";
@@ -29,7 +29,7 @@ export const ProfileSettingsPage = () => {
   const [fieldErrors, setFieldErrors] = useState({});
 
   // Sync profile state from appUser or backend
-  const populateFields = (data) => {
+  const populateFields = useCallback((data) => {
     if (!data) return;
     setProfile({
       fullName: data.fullName || "",
@@ -43,7 +43,7 @@ export const ProfileSettingsPage = () => {
       avatarUrl: data.avatarUrl || "",
     });
     setEmail(data.email || user?.email || "");
-  };
+  }, [user?.email]);
 
   useEffect(() => {
     let isMounted = true;
@@ -82,7 +82,7 @@ export const ProfileSettingsPage = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [appUser, populateFields]);
 
   const handleChange = (field, val) => {
     setProfile((prev) => ({ ...prev, [field]: val }));

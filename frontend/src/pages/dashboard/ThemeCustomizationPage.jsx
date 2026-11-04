@@ -24,6 +24,7 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
   const [portfolio, setPortfolio] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
   const presets = [
     { id: "stripe-indigo", name: "Stripe Indigo", primary: "#4f46e5", secondary: "#0ea5e9" },
@@ -123,10 +124,14 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
 
       await updatePortfolioTheme(portfolioId, activePreset, themeConfig);
 
-      if (onApplyTheme) onApplyTheme();
-      else alert("Theme styles saved and applied to portfolio!");
+      if (onApplyTheme) {
+        onApplyTheme();
+      } else {
+        setFeedback({ type: "success", text: "Theme styles saved and applied to portfolio!" });
+        setTimeout(() => setFeedback(null), 4000);
+      }
     } catch (err) {
-      alert(`Failed to save theme: ${err.message}`);
+      setFeedback({ type: "error", text: `Failed to save theme: ${err.message}` });
     } finally {
       setIsSaving(false);
     }
@@ -210,6 +215,27 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
           </button>
         </div>
       </div>
+
+      {feedback && (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          style={{
+            padding: "10px 18px",
+            borderRadius: "10px",
+            marginBottom: "1.25rem",
+            fontSize: "0.9rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: feedback.type === "error" ? "rgba(239, 68, 68, 0.15)" : "rgba(82, 224, 163, 0.15)",
+            border: `1px solid ${feedback.type === "error" ? "rgba(239, 68, 68, 0.35)" : "rgba(82, 224, 163, 0.35)"}`,
+            color: feedback.type === "error" ? "#fca5a5" : "var(--color-success, #52E0A3)",
+          }}
+        >
+          <span>{feedback.type === "error" ? "⚠️" : "✓"}</span>
+          <span>{feedback.text}</span>
+        </div>
+      )}
 
       {/* Main Workspace Grid (Controls + Live Canvas) */}
       <div className="theme-workspace-grid">

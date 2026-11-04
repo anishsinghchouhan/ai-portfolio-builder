@@ -472,7 +472,7 @@ export const AIResumeParserPage = ({ onNavigate }) => {
         >
           <span style={{ fontSize: "1.25rem" }}>ℹ️</span>
           <div>
-            <strong style={{ color: "#ffffff" }}>Preview — not connected yet:</strong> Automated PDF extraction and Gemini AI parsing pipeline are scheduled for Round 2. The fields below demonstrate the parsed layout.
+            <strong style={{ color: "#ffffff" }}>Preview — not connected yet:</strong> Resume PDF parsing, section extraction, and cloud storage are scheduled for Round 2.
           </div>
         </div>
 

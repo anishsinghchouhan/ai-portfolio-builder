@@ -277,7 +277,12 @@ export const PublishPortfolioPage = () => {
 
         {/* RIGHT COLUMN: SEO Settings & Meta Preview */}
         <div className="publish-card-box">
-          <h3>🔍 Search Engine Optimization (SEO)</h3>
+          <h3 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span>🔍 Search Engine Optimization (SEO)</span>
+            <span style={{ fontSize: "0.7rem", padding: "2px 8px", background: "rgba(148, 163, 184, 0.15)", color: "#94a3b8", borderRadius: "6px" }}>
+              Coming soon
+            </span>
+          </h3>
 
           {/* Meta Title */}
           <div className="field-group-publish">
