@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import StatusBadge from "../common/StatusBadge";
+import StatusBadge from "./StatusBadge";
 import "./ProductJourneySection.css";
 
 const renderStepIcon = (key) => {

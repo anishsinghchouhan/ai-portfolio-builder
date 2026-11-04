@@ -161,7 +161,7 @@ export const CreatePortfolioModal = ({ isOpen, onClose }) => {
           <div className="modal-secondary-option">
             <span>Want to start with pre-made content?</span>{" "}
             <Link
-              to={ROUTES.TEMPLATES}
+              to={ROUTES.DASHBOARD_TEMPLATES}
               onClick={onClose}
               className="link-templates-secondary"
             >

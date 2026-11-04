@@ -181,7 +181,6 @@ export function App() {
                 <Route path={ROUTES.DASHBOARD_PORTFOLIO} element={<PortfolioPage />} />
                 <Route path={ROUTES.DASHBOARD_UPLOAD} element={<ResumeUploadPage />} />
                 <Route path={ROUTES.DASHBOARD_TEMPLATES} element={<TemplatesMarketplacePage />} />
-                <Route path="/dashboard/templates" element={<TemplatesMarketplacePage />} />
                 <Route path={ROUTES.DASHBOARD_BUILDER} element={<PortfolioBuilderDashboard />} />
                 <Route path="/dashboard/builder" element={<PortfolioBuilderDashboard />} />
                 <Route path={ROUTES.DASHBOARD_THEMES} element={<ThemeCustomizationPage />} />
