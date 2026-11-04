@@ -49,12 +49,14 @@ app.get("/health", (req, res) => {
   });
 });
 
-// 4. Strict Whitelist CORS Configuration (Only allowed frontend URL from .env)
+// 4. Strict Whitelist CORS Configuration (Allowed frontend URLs from .env + project Vercel previews)
+const VERCEL_PREVIEW_REGEX =
+  /^https:\/\/frontend-[a-z0-9]+-singhanish0477-9542s-projects\.vercel\.app$/;
 
-
-const allowedOrigins = [env.CORS_ORIGIN]
-  .filter(Boolean)
-  .map((origin) => origin.trim().replace(/\/$/, ""));
+const allowedOrigins = (env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
 
 app.use(
   cors({
@@ -67,7 +69,10 @@ app.use(
 
       const normalizedOrigin = origin.trim().replace(/\/$/, "");
 
-      if (allowedOrigins.includes(normalizedOrigin)) {
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        VERCEL_PREVIEW_REGEX.test(normalizedOrigin)
+      ) {
         return callback(null, true);
       }
 
