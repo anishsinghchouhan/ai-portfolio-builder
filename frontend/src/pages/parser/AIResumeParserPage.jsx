@@ -1048,7 +1048,7 @@ export const AIResumeParserPage = ({ onNavigate }) => {
                     </div>
                   ) : (
                     <div className="cards-stack">
-                      {data.experiences.map((exp, index) => (
+                      {data.experiences.map((exp) => (
                         <div key={exp.id} className="item-edit-card">
                           <div className="item-card-top">
                             <div className="drag-handle" title="Drag to reorder">⋮⋮</div>
