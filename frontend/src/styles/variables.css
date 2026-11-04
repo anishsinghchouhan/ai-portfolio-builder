@@ -1,54 +1,67 @@
 /* AI Portfolio Builder - Design System CSS Variables */
 :root {
+  /* Standard Production Design System Tokens */
+  --color-background: #0D1017;
+  --color-sidebar: #0A0D13;
+  --color-surface: #141925;
+  --color-surface-2: #1A2030;
+  --color-border: #252C3C;
+  --color-text: #E9ECF3;
+  --color-muted: #98A1B4;
+  --color-disabled: #8892A6;
+  --color-accent: #8A96FF;
+  --color-accent-text: #0D1017;
+  --color-success: #52E0A3;
+  --color-warning: #F2B84B;
+  --radius-card: 16px;
+  --radius-btn: 10px;
+  --font-heading: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
   /* Colors — Brand */
-  --color-primary: #4F46E5;
-  --color-primary-hover: #4338CA;
-  --color-primary-active: #3730A3;
-  --color-primary-subtle: #EEF2FF;
+  --color-primary: #8A96FF;
+  --color-primary-hover: #7581F5;
+  --color-primary-active: #626EE8;
+  --color-primary-subtle: #1A2030;
   --color-secondary: #0EA5E9;
   --color-secondary-hover: #0284C7;
 
   /* Colors — Semantic */
-  --color-success: #16A34A;
-  --color-success-subtle: #F0FDF4;
-  --color-danger: #DC2626;
-  --color-danger-subtle: #FEF2F2;
-  --color-warning: #D97706;
-  --color-warning-subtle: #FFFBEB;
-  --color-info: #2563EB;
-  --color-info-subtle: #EFF6FF;
+  --color-success-subtle: rgba(82, 224, 163, 0.1);
+  --color-danger: #F87171;
+  --color-danger-subtle: rgba(248, 113, 113, 0.1);
+  --color-warning-subtle: rgba(242, 184, 75, 0.1);
+  --color-info: #60A5FA;
+  --color-info-subtle: rgba(96, 165, 250, 0.1);
 
   /* Colors — Neutral / Surface */
-  --color-background: #FFFFFF;
-  --color-surface: #F8FAFC;
-  --color-card: #FFFFFF;
-  --color-border: #E2E8F0;
-  --color-border-strong: #CBD5E1;
+  --color-card: #141925;
+  --color-border-strong: #364154;
 
   /* Colors — Text */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94A3B8;
+  --color-text-primary: #E9ECF3;
+  --color-text-secondary: #98A1B4;
+  --color-text-muted: #8892A6;
 
   /* Colors — Interaction */
-  --color-hover-overlay: rgba(15, 23, 42, 0.04);
-  --color-active-overlay: rgba(15, 23, 42, 0.08);
-  --color-disabled-bg: #F1F5F9;
-  --color-disabled-text: #CBD5E1;
-  --color-focus-ring: #818CF8;
+  --color-hover-overlay: rgba(233, 236, 243, 0.04);
+  --color-active-overlay: rgba(233, 236, 243, 0.08);
+  --color-disabled-bg: #141925;
+  --color-disabled-text: #8892A6;
+  --color-focus-ring: #8A96FF;
 
   /* Dark Theme Tokens (Default active for app) */
-  --color-background-dark: #0B0F19;
-  --color-surface-dark: #111827;
-  --color-card-dark: #1A2233;
-  --color-border-dark: #2A3441;
-  --color-text-primary-dark: #F1F5F9;
-  --color-text-secondary-dark: #94A3B8;
-  --color-text-muted-dark: #64748B;
-  --color-primary-dark: #818CF8;
-  --color-success-dark: #4ADE80;
+  --color-background-dark: #0D1017;
+  --color-surface-dark: #141925;
+  --color-card-dark: #1A2030;
+  --color-border-dark: #252C3C;
+  --color-text-primary-dark: #E9ECF3;
+  --color-text-secondary-dark: #98A1B4;
+  --color-text-muted-dark: #8892A6;
+  --color-primary-dark: #8A96FF;
+  --color-success-dark: #52E0A3;
   --color-danger-dark: #F87171;
-  --color-warning-dark: #FBBF24;
+  --color-warning-dark: #F2B84B;
   --color-info-dark: #60A5FA;
 
   /* Landing Page Theme Tokens — Default Dark Mode */
