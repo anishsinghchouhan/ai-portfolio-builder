@@ -22,6 +22,7 @@ export const Sidebar = ({
   const navigate = useNavigate();
 
   const userName = user?.user_metadata?.full_name || appUser?.fullName || user?.email?.split("@")[0] || "User";
+  const userEmail = user?.email || "";
   const avatarUrl = user?.user_metadata?.avatar_url || appUser?.avatarUrl;
   const userInitials = userName
     .split(" ")
