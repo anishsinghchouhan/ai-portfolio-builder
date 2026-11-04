@@ -5,33 +5,26 @@ import { authStore } from "../../store/authSlice";
 import { ROUTES } from "../../constants/routes";
 
 /**
- * AuthCallback handles Supabase PKCE OAuth (e.g. Google sign-in) & email verification redirects.
+ * AuthCallback handles Supabase PKCE & Email Verification auth redirects.
  *
- * Requirements:
- * - No manual code exchange call (Supabase detectSessionInUrl handles PKCE code exchange automatically).
- * - Preserves browser auth storage without manual clearing.
- * - Checks supabase.auth.getSession(); if a session exists, navigates to ROUTES.DASHBOARD.
- * - Subscribes to onAuthStateChange and navigates to ROUTES.DASHBOARD on SIGNED_IN.
- * - Unsubscribes on unmount.
- * - Shows the error card ONLY if there is no session AND the URL contains "error" or "error_description".
- * - Otherwise displays the loading state while the session is confirmed.
+ * Flow Strategy:
+ * 1. Listens for `onAuthStateChange` (SIGNED_IN / TOKEN_REFRESHED).
+ * 2. Checks `getSession()` for auto-detected session.
+ * 3. Exchanges authorization `code` via `exchangeCodeForSession(code)` or `verifyOtp({ token_hash, type })`.
+ * 4. Restores Supabase session in `authStore` and redirects to `/#dashboard`.
+ * 5. Displays actual Supabase error messages on failure (no artificial timeouts).
  */
 export const AuthCallback = () => {
-  const [status, setStatus] = useState("loading"); // "loading" | "error"
+  const [status, setStatus] = useState("processing"); // "processing" | "success" | "error"
   const [errorMessage, setErrorMessage] = useState("");
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
+    let isSubscribed = true;
 
-    // Check for error parameters in URL query or hash
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const errorParam = searchParams.get("error") || hashParams.get("error");
-    const errorDescription = searchParams.get("error_description") || hashParams.get("error_description");
-
-    const handleSession = (session) => {
-      if (!isMounted) return;
+    const handleSuccess = (session, isRecovery) => {
+      if (!isSubscribed) return;
       if (session) {
         authStore.setState({
           session,
@@ -41,33 +34,136 @@ export const AuthCallback = () => {
           error: null,
         });
       }
-      navigate(ROUTES.DASHBOARD, { replace: true });
+      if (isRecovery) {
+        sessionStorage.setItem("supabase_auth_recovery", "true");
+        setIsPasswordRecovery(true);
+      }
+      setStatus("success");
+      setTimeout(() => {
+        navigate(isRecovery ? ROUTES.RESET_PASSWORD : ROUTES.DASHBOARD, { replace: true });
+      }, 1000);
     };
 
-    // 1. Check if a session already exists (e.g. auto-detected by Supabase client)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return;
-      if (session) {
-        handleSession(session);
-      } else if (errorParam || errorDescription) {
-        // Show error card ONLY if there is no session AND error params exist in the URL
-        setStatus("error");
-        setErrorMessage(errorDescription || errorParam || "Authentication failed. Please try signing in again.");
+    const handleError = (msg) => {
+      if (!isSubscribed) return;
+      setStatus("error");
+      setErrorMessage(msg || "Failed to verify email. Please try signing in.");
+    };
+
+    const processAuthCallback = async () => {
+      try {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash");
+        const type = url.searchParams.get("type");
+        const errorParam = url.searchParams.get("error");
+        const errorDescription = url.searchParams.get("error_description");
+        const isRecoveryInitial =
+          type === "recovery" ||
+          window.location.hash.includes("type=recovery") ||
+          sessionStorage.getItem("supabase_auth_recovery") === "true";
+
+        // 1. If Supabase returned an explicit error in URL parameters
+        if (errorParam) {
+          handleError(errorDescription || `Authentication error: ${errorParam}`);
+          return;
+        }
+
+        // 2. Check if active session ALREADY exists (e.g. auto-detected by Supabase client)
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+          handleSuccess(currentSession, isRecoveryInitial);
+          return;
+        }
+
+        // 3. PKCE Flow: Exchange authorization code for session
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error("[AuthCallback] PKCE Code Exchange Error:", error);
+            // Double check if session was created concurrently
+            const { data: { session: checkSession } } = await supabase.auth.getSession();
+            if (checkSession) {
+              const isRec = isRecoveryInitial || data?.redirectType === "recovery";
+              handleSuccess(checkSession, isRec);
+              return;
+            }
+            // Display actual Supabase error message
+            handleError(error.message || "Invalid or expired verification link.");
+            return;
+          }
+
+          if (data?.session) {
+            const isRec = isRecoveryInitial || data?.redirectType === "recovery";
+            handleSuccess(data.session, isRec);
+            return;
+          }
+        }
+
+        // 4. OTP Token Hash Flow (if token_hash is present)
+        if (tokenHash && type) {
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type,
+          });
+          if (error) {
+            console.error("[AuthCallback] Verify OTP Error:", error);
+            handleError(error.message || "Verification link is invalid or expired.");
+            return;
+          }
+          if (data?.session) {
+            const isRec = isRecoveryInitial || type === "recovery";
+            handleSuccess(data.session, isRec);
+            return;
+          }
+        }
+
+        // 5. Implicit Flow / Hash Fragment Fallback
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        if (hashParams.get("access_token")) {
+          const { data: { session: hashSession } } = await supabase.auth.getSession();
+          if (hashSession) {
+            const isRec = isRecoveryInitial || hashParams.get("type") === "recovery";
+            handleSuccess(hashSession, isRec);
+            return;
+          }
+        }
+
+        // 6. Final fallback check
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (finalSession) {
+          handleSuccess(finalSession, isRecoveryInitial);
+          return;
+        }
+
+        // If no code, token, or session exists
+        handleError("No verification link parameters found. Please check your link or sign in.");
+      } catch (err) {
+        console.error("[AuthCallback] Unexpected Exception:", err);
+        handleError(err.message || "An unexpected error occurred during verification.");
+      }
+    };
+
+    // Secondary guarantee: Listen for auth state change events from Supabase client
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "PASSWORD_RECOVERY") && session) {
+        const url = new URL(window.location.href);
+        const isRec =
+          event === "PASSWORD_RECOVERY" ||
+          url.searchParams.get("type") === "recovery" ||
+          window.location.hash.includes("type=recovery") ||
+          sessionStorage.getItem("supabase_auth_recovery") === "true";
+        handleSuccess(session, isRec);
       }
     });
 
-    // 2. Otherwise subscribe to onAuthStateChange and navigate on SIGNED_IN
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        handleSession(session);
-      }
-    });
+    processAuthCallback();
 
     return () => {
-      isMounted = false;
+      isSubscribed = false;
       subscription?.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   return (
     <div style={{
@@ -89,8 +185,8 @@ export const AuthCallback = () => {
         textAlign: "center",
         color: "#fff",
       }}>
-        {/* Loading State */}
-        {status === "loading" && (
+        {/* Processing State */}
+        {status === "processing" && (
           <>
             <div style={{
               width: "48px",
@@ -110,6 +206,23 @@ export const AuthCallback = () => {
           </>
         )}
 
+        {/* Success State */}
+        {status === "success" && (
+          <>
+            <div style={{ fontSize: "3rem", marginBottom: "16px" }}>
+              {isPasswordRecovery ? "🔑" : "✅"}
+            </div>
+            <h2 style={{ fontSize: "1.5rem", marginBottom: "8px", fontWeight: 700 }}>
+              {isPasswordRecovery ? "Password Reset Link Verified!" : "Verification Successful!"}
+            </h2>
+            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+              {isPasswordRecovery
+                ? "Redirecting you to set your new password..."
+                : "Redirecting you to your account..."}
+            </p>
+          </>
+        )}
+
         {/* Error State */}
         {status === "error" && (
           <>
@@ -122,7 +235,7 @@ export const AuthCallback = () => {
               fontWeight: 700,
               color: "#fca5a5",
             }}>
-              Authentication Error
+              Verification Link Issue
             </h2>
             <p style={{
               color: "#94a3b8",
