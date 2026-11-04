@@ -34,6 +34,7 @@ export const DashboardLayout = () => {
     const path = location.pathname;
     if (path.startsWith("/dashboard/upload")) return "resume";
     if (
+      path.startsWith("/dashboard/portfolio") ||
       path.startsWith("/dashboard/builder") ||
       path.startsWith("/dashboard/themes") ||
       path.startsWith("/dashboard/publish")
@@ -50,6 +51,7 @@ export const DashboardLayout = () => {
   // Derive breadcrumb path from current route
   const getBreadcrumbPath = () => {
     const path = location.pathname;
+    if (path.startsWith("/dashboard/portfolio")) return ["Dashboard", "Portfolio"];
     if (path.startsWith("/dashboard/upload")) return ["Dashboard", "Resume & AI"];
     if (path.startsWith("/dashboard/builder")) return ["Dashboard", "Portfolio Builder"];
     if (path.startsWith("/dashboard/themes")) return ["Dashboard", "Theme Customization"];
@@ -64,7 +66,7 @@ export const DashboardLayout = () => {
   const handleMenuSelect = (id) => {
     const routeMap = {
       dashboard: ROUTES.DASHBOARD,
-      portfolio: ROUTES.DASHBOARD,
+      portfolio: ROUTES.DASHBOARD_PORTFOLIO,
       resume: ROUTES.DASHBOARD_UPLOAD,
       templates: ROUTES.TEMPLATES,
       analytics: ROUTES.DASHBOARD_ANALYTICS,
