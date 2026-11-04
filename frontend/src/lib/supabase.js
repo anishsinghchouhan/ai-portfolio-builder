@@ -29,10 +29,10 @@ if (import.meta.env.DEV && !isSupabaseConfigured) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    flowType: "pkce",
+    detectSessionInUrl: true,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
   },
 });
 
