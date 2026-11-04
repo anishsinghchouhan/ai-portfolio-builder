@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import ProductJourneySection from "../../components/dashboard/ProductJourneySection";
 import RecentPortfoliosSection from "../../components/dashboard/RecentPortfoliosSection";
 import CreatePortfolioModal from "../../components/dashboard/CreatePortfolioModal";
-import ErrorState from "../../components/common/ErrorState";
-import Skeleton from "../../components/common/Skeleton";
+import ErrorState from "../../components/dashboard/ErrorState";
+import Skeleton from "../../components/dashboard/Skeleton";
 import { useSummary } from "../../hooks/useSummary";
 import "./PortfolioPage.css";
 

@@ -158,3 +158,35 @@
   --landing-shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
   --landing-glow-opacity: 0.08;
 }
+
+/* ===== Dashboard theme tokens (scoped; independent of landing) ===== */
+.dashboard-root,
+:root[data-dashboard-theme="dark"],
+[data-dashboard-theme="dark"] {            /* DARK (current look, keep visually unchanged) */
+  --dash-bg: #0B0F19;  --dash-bg-2: #0F172A;  --dash-surface: #111827;  --dash-card: #1A2233;
+  --dash-border: #2A3441;  --dash-border-strong: #3A4660;
+  --dash-text: #F1F5F9;  --dash-text-2: #94A3B8;  --dash-text-muted: #94A3B8;
+  --dash-accent: #818CF8;  --dash-accent-hover: #A5B4FC;  --dash-accent-contrast: #0B0F19;  --dash-accent-subtle: rgba(129,140,248,.14);
+  --dash-secondary: #38BDF8;
+  --dash-success: #4ADE80;  --dash-success-subtle: rgba(74,222,128,.12);
+  --dash-warning: #FBBF24;  --dash-warning-subtle: rgba(251,191,36,.12);
+  --dash-danger: #F87171;   --dash-danger-subtle: rgba(248,113,113,.12);
+  --dash-info: #60A5FA;
+  --dash-input-bg: #0B0F19;  --dash-hover: rgba(241,245,249,.06);  --dash-focus-ring: #A5B4FC;
+  --dash-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+.dashboard-root.light,
+:root[data-dashboard-theme="light"],
+[data-dashboard-theme="light"] {      /* LIGHT: values taken from the landing page's light tokens */
+  --dash-bg: #F8FAFC;  --dash-bg-2: #F1F5F9;  --dash-surface: #FFFFFF;  --dash-card: #FFFFFF;
+  --dash-border: #E2E8F0;  --dash-border-strong: #CBD5E1;
+  --dash-text: #0F172A;  --dash-text-2: #475569;  --dash-text-muted: #64748B;
+  --dash-accent: #4F46E5;  --dash-accent-hover: #4338CA;  --dash-accent-contrast: #FFFFFF;  --dash-accent-subtle: #EEF2FF;
+  --dash-secondary: #0EA5E9;
+  --dash-success: #16A34A;  --dash-success-subtle: #F0FDF4;
+  --dash-warning: #D97706;  --dash-warning-subtle: #FFFBEB;
+  --dash-danger: #DC2626;   --dash-danger-subtle: #FEF2F2;
+  --dash-info: #2563EB;
+  --dash-input-bg: #FFFFFF;  --dash-hover: rgba(15,23,42,.04);  --dash-focus-ring: #4F46E5;
+  --dash-shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+}

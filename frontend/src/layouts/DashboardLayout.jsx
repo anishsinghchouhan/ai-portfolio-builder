@@ -41,7 +41,7 @@ export const DashboardLayout = () => {
     ) {
       return "portfolio";
     }
-    if (path.startsWith("/templates") || path.startsWith("/dashboard/templates")) return "templates";
+    if (path.startsWith("/dashboard/templates")) return "templates";
     if (path.startsWith("/dashboard/analytics")) return "analytics";
     if (path.startsWith("/dashboard/settings")) return "settings";
     if (path.startsWith("/dashboard/profile")) return "profile";
@@ -56,7 +56,7 @@ export const DashboardLayout = () => {
     if (path.startsWith("/dashboard/builder")) return ["Dashboard", "Portfolio Builder"];
     if (path.startsWith("/dashboard/themes")) return ["Dashboard", "Theme Customization"];
     if (path.startsWith("/dashboard/publish")) return ["Dashboard", "Publish & Domain"];
-    if (path.startsWith("/templates") || path.startsWith("/dashboard/templates")) return ["Dashboard", "Templates"];
+    if (path.startsWith("/dashboard/templates")) return ["Dashboard", "Templates"];
     if (path.startsWith("/dashboard/analytics")) return ["Dashboard", "Analytics"];
     if (path.startsWith("/dashboard/settings")) return ["Dashboard", "Settings"];
     if (path.startsWith("/dashboard/profile")) return ["Dashboard", "Profile"];
@@ -68,7 +68,7 @@ export const DashboardLayout = () => {
       dashboard: ROUTES.DASHBOARD,
       portfolio: ROUTES.DASHBOARD_PORTFOLIO,
       resume: ROUTES.DASHBOARD_UPLOAD,
-      templates: ROUTES.TEMPLATES,
+      templates: ROUTES.DASHBOARD_TEMPLATES,
       analytics: ROUTES.DASHBOARD_ANALYTICS,
       settings: ROUTES.DASHBOARD_SETTINGS,
       profile: ROUTES.DASHBOARD_PROFILE,

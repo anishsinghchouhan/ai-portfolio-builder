@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import StatusBadge from "../common/StatusBadge";
+import StatusBadge from "./StatusBadge";
 import { getBuilderPath, ROUTES } from "../../constants/routes";
 import "./RecentPortfoliosSection.css";
 
