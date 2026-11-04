@@ -8,9 +8,7 @@ import "./Header.css";
 
 export const Header = ({
   breadcrumbPath = ["Dashboard", "Overview"],
-  onQuickAdd,
   onThemeToggle,
-  onOpenNotifications,
   onLogout,
   isMobileOpen = false,
   onToggleMobileMenu,
@@ -19,14 +17,9 @@ export const Header = ({
   const { user, appUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Dropdown states
+  // Dropdown state
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
-
   const profileRef = useRef(null);
-  const notificationsRef = useRef(null);
-  const messagesRef = useRef(null);
 
   // Real user display metadata
   const userName = user?.user_metadata?.full_name || appUser?.fullName || user?.email?.split("@")[0] || "User";
@@ -46,12 +39,6 @@ export const Header = ({
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setIsProfileOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
-        setIsNotificationsOpen(false);
-      }
-      if (messagesRef.current && !messagesRef.current.contains(e.target)) {
-        setIsMessagesOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -62,21 +49,11 @@ export const Header = ({
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         setIsProfileOpen(false);
-        setIsNotificationsOpen(false);
-        setIsMessagesOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  const handleQuickAddClick = () => {
-    if (onQuickAdd) {
-      onQuickAdd();
-    } else {
-      navigate(ROUTES.DASHBOARD_UPLOAD);
-    }
-  };
 
   const handleLogout = async () => {
     setIsProfileOpen(false);
@@ -98,7 +75,7 @@ export const Header = ({
           aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={isMobileOpen}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
             {isMobileOpen ? (
               <>
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -128,95 +105,8 @@ export const Header = ({
         </nav>
       </div>
 
-      {/* RIGHT SECTION: Quick Add, Notifications, Messages, Theme & Real User Profile */}
+      {/* RIGHT SECTION: Theme Toggle & Real User Profile Menu */}
       <div className="header-right-group">
-        {/* Quick Add CTA Button */}
-        <button
-          type="button"
-          className="btn-quick-add"
-          onClick={handleQuickAddClick}
-          title="Create or Upload New Portfolio"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Quick Add</span>
-        </button>
-
-        {/* Messages & Inquiries Icon Button (Badges removed) */}
-        <div ref={messagesRef} style={{ position: "relative" }}>
-          <button
-            type="button"
-            className="header-icon-btn"
-            onClick={() => {
-              setIsMessagesOpen(!isMessagesOpen);
-              setIsNotificationsOpen(false);
-              setIsProfileOpen(false);
-            }}
-            title="Messages & Inquiries"
-            aria-expanded={isMessagesOpen}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-
-          {/* Messages Floating Panel */}
-          {isMessagesOpen && (
-            <div className="header-dropdown-menu dropdown-wide">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px 10px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <strong style={{ fontSize: "0.85rem", color: "#fff" }}>Inbox & Inquiries</strong>
-              </div>
-              <div style={{ padding: "12px", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
-                No new messages at this time.
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Notifications Icon Button (Badges removed) */}
-        <div ref={notificationsRef} style={{ position: "relative" }}>
-          <button
-            type="button"
-            className="header-icon-btn"
-            onClick={() => {
-              setIsNotificationsOpen(!isNotificationsOpen);
-              setIsMessagesOpen(false);
-              setIsProfileOpen(false);
-            }}
-            title="Notifications"
-            aria-expanded={isNotificationsOpen}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </button>
-
-          {/* Notifications Floating Panel */}
-          {isNotificationsOpen && (
-            <div className="header-dropdown-menu dropdown-wide">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px 10px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <strong style={{ fontSize: "0.85rem", color: "#fff" }}>Notifications</strong>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsNotificationsOpen(false);
-                    if (onOpenNotifications) onOpenNotifications();
-                  }}
-                  style={{ background: "none", border: "none", color: "#818cf8", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600 }}
-                >
-                  View All →
-                </button>
-              </div>
-              <div style={{ padding: "12px", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
-                You're all caught up!
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Dashboard Theme Switch (Dark/Light) */}
         <ThemeToggle
           theme={theme}
@@ -231,11 +121,7 @@ export const Header = ({
           <button
             type="button"
             className="user-profile-menu-btn"
-            onClick={() => {
-              setIsProfileOpen(!isProfileOpen);
-              setIsNotificationsOpen(false);
-              setIsMessagesOpen(false);
-            }}
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
             aria-expanded={isProfileOpen}
             title={userName}
           >
@@ -267,7 +153,7 @@ export const Header = ({
               )}
               <span className="user-online-dot" />
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "#94a3b8" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "#94a3b8" }} aria-hidden="true">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
@@ -288,7 +174,12 @@ export const Header = ({
                   navigate(ROUTES.DASHBOARD);
                 }}
               >
-                <span>🌐</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
                 <span>Dashboard Overview</span>
               </button>
 
@@ -300,7 +191,10 @@ export const Header = ({
                   navigate(ROUTES.DASHBOARD_PROFILE);
                 }}
               >
-                <span>👤</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
                 <span>Candidate Profile</span>
               </button>
 
@@ -312,7 +206,10 @@ export const Header = ({
                   navigate(ROUTES.DASHBOARD_SETTINGS);
                 }}
               >
-                <span>⚙️</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
                 <span>Settings</span>
               </button>
 
@@ -324,7 +221,10 @@ export const Header = ({
                   navigate(ROUTES.PRICING);
                 }}
               >
-                <span>💎</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
                 <span>Billing & Plans</span>
               </button>
 
@@ -333,7 +233,11 @@ export const Header = ({
                 className="dropdown-menu-item logout"
                 onClick={handleLogout}
               >
-                <span>🚪</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
                 <span>Sign Out</span>
               </button>
             </div>

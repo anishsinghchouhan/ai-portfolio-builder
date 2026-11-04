@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "./constants/routes";
+import { isApiConfigured } from "./services/api";
+import { isSupabaseConfigured } from "./lib/supabase";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 
@@ -66,6 +68,92 @@ export function App() {
       }
     }
   }, [location.pathname, navigate]);
+
+  // Guard: In production, require API and Supabase configuration to avoid confusing silent breaks
+  if (import.meta.env.PROD && (!isApiConfigured || !isSupabaseConfigured)) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "var(--color-background, #0D1017)",
+          color: "var(--color-text, #E9ECF3)",
+          padding: "2rem",
+          fontFamily: "var(--font-body, 'Inter', sans-serif)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "480px",
+            width: "100%",
+            background: "var(--color-surface, #141925)",
+            border: "1px solid var(--color-border, #252C3C)",
+            borderRadius: "var(--radius-card, 16px)",
+            padding: "2.5rem 2rem",
+            textAlign: "center",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+          }}
+        >
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              background: "rgba(242, 184, 75, 0.15)",
+              color: "var(--color-warning, #F2B84B)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.25rem",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-heading, 'Manrope', sans-serif)",
+              fontSize: "1.4rem",
+              fontWeight: 700,
+              marginBottom: "0.75rem",
+              color: "var(--color-text, #E9ECF3)",
+            }}
+          >
+            Configuration Required
+          </h1>
+          <p
+            style={{
+              color: "var(--color-muted, #98A1B4)",
+              fontSize: "0.925rem",
+              lineHeight: 1.5,
+              marginBottom: "1rem",
+            }}
+          >
+            This production build requires backend API and Supabase environment variables to function properly.
+          </p>
+          <div
+            style={{
+              background: "rgba(0,0,0,0.25)",
+              borderRadius: "8px",
+              padding: "0.75rem",
+              fontSize: "0.8rem",
+              textAlign: "left",
+              fontFamily: "monospace",
+              color: "var(--color-muted, #98A1B4)",
+            }}
+          >
+            {!isApiConfigured && <div>• VITE_API_URL is missing</div>}
+            {!isSupabaseConfigured && <div>• VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing</div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LandingThemeProvider>

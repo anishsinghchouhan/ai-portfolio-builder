@@ -21,6 +21,7 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
 
   // Content state
   const [portfolioTitle, setPortfolioTitle] = useState("");
+  const [actionError, setActionError] = useState(null);
   const [sections, setSections] = useState([
     { id: "hero", name: "Hero Header", icon: "🚀", isVisible: true },
     { id: "about", name: "About & Bio", icon: "👤", isVisible: true },
@@ -134,13 +135,11 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
       if (onSaveDraft) onSaveDraft();
     } catch (err) {
       setSaveStatus("Save failed");
-      alert(`Save failed: ${err.message}`);
+      setActionError(`Save failed: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
   };
-
-  const [actionError, setActionError] = useState(null);
 
   const handlePublishClick = async () => {
     if (!portfolioId || isSaving) return;

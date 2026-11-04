@@ -68,6 +68,68 @@
   transform: translateY(-1px);
 }
 
+.portfolio-empty-dashed-card {
+  border: 2px dashed var(--color-border, #252C3C);
+  border-radius: var(--radius-card, 16px);
+  padding: 2.75rem 1.5rem;
+  text-align: center;
+  background: rgba(20, 25, 37, 0.4);
+}
+
+.empty-dashed-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.portfolio-empty-dashed-card h3 {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 1.15rem;
+  color: var(--color-text, #E9ECF3);
+  margin: 0.5rem 0;
+}
+
+.portfolio-empty-dashed-card p {
+  color: var(--color-muted, #98A1B4);
+  font-size: 0.9rem;
+  max-width: 420px;
+  margin: 0 auto 1.5rem;
+}
+
+.empty-dashed-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary-link {
+  color: var(--color-accent, #8A96FF);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-btn, 10px);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-link:hover {
+  text-decoration: underline;
+  color: #a5afff;
+}
+
+.btn-view-all-link {
+  color: var(--color-accent, #8A96FF);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.btn-view-all-link:hover {
+  text-decoration: underline;
+}
+
 .portfolios-grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

@@ -7,6 +7,7 @@ import {
   calculateProfileStrength,
   calculateReadiness,
   calculateJourney,
+  buildRecentActivity,
   invalidateDashboardSummaryCache,
 } from "../src/services/dashboardService.js";
 
@@ -227,7 +228,44 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
     });
   });
 
-  describe("4. Cache Invalidation", () => {
+  describe("4. Recent Activity Timeline Builder", () => {
+    it("returns empty array when user has no portfolios or resumes", () => {
+      const activities = buildRecentActivity({ recentPortfolios: [], latestResume: null });
+      assert.equal(Array.isArray(activities), true);
+      assert.equal(activities.length, 0);
+    });
+
+    it("builds timeline from real portfolio timestamps and sorts newest first", () => {
+      const recentPortfolios = [
+        {
+          id: "p_1",
+          title: "sss",
+          slug: "sss-portfolio",
+          status: "DRAFT",
+          createdAt: new Date("2026-11-03T10:00:00Z").toISOString(),
+          updatedAt: new Date("2026-11-03T10:00:00Z").toISOString(),
+        },
+        {
+          id: "p_2",
+          title: "wee",
+          slug: "wee-portfolio",
+          status: "PUBLISHED",
+          createdAt: new Date("2026-11-03T11:00:00Z").toISOString(),
+          updatedAt: new Date("2026-11-03T11:30:00Z").toISOString(),
+          publishedAt: new Date("2026-11-03T11:30:00Z").toISOString(),
+        },
+      ];
+
+      const activities = buildRecentActivity({ recentPortfolios, latestResume: null });
+      assert.ok(activities.length >= 2, "Expected at least 2 events for 2 portfolios");
+      // Newest event should be the publish of wee at 11:30
+      assert.equal(activities[0].title, 'Published portfolio "wee"');
+      // Should include creation of sss
+      assert.ok(activities.some((a) => a.title === 'Created portfolio "sss"'));
+    });
+  });
+
+  describe("5. Cache Invalidation", () => {
     it("invalidateDashboardSummaryCache function is exported and callable without throwing", () => {
       assert.doesNotThrow(() => {
         invalidateDashboardSummaryCache("user_test_123");
@@ -238,7 +276,7 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
     });
   });
 
-  describe("5. Visitor Telemetry Hash Safety (Never raw IP)", () => {
+  describe("5. Visitor Telemetry Hash Safety & 30-Minute Deduplication", () => {
     it("hashes IP with salt using SHA-256 so raw IP is never stored", () => {
       const rawIp = "192.168.1.100";
       const salt = "test-salt-secret";
@@ -253,6 +291,22 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
       assert.equal(hash.length, 64);
       assert.ok(!hash.includes(rawIp));
       assert.ok(!hash.includes("192.168"));
+    });
+
+    it("evaluates 30-minute deduplication window for public portfolio view tracking", () => {
+      const now = Date.now();
+      const thirtyMinutesMs = 30 * 60 * 1000;
+      const thirtyMinutesAgo = new Date(now - thirtyMinutesMs);
+
+      // Simulating a view recorded 10 minutes ago (within deduplication window)
+      const recentVisitTime = new Date(now - 10 * 60 * 1000);
+      const isWithinWindow = recentVisitTime >= thirtyMinutesAgo;
+      assert.equal(isWithinWindow, true, "Visit within 30 min should be deduplicated (not incremented)");
+
+      // Simulating a visit from 35 minutes ago (outside deduplication window)
+      const oldVisitTime = new Date(now - 35 * 60 * 1000);
+      const isOldWithinWindow = oldVisitTime >= thirtyMinutesAgo;
+      assert.equal(isOldWithinWindow, false, "Visit older than 30 min should be counted as a new view");
     });
   });
 

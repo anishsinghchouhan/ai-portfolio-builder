@@ -6,87 +6,106 @@
   box-sizing: border-box;
 }
 
-/* 5-Card Grid Layout */
+/* 4-Card KPI Grid Layout */
+.stats-cards-grid-4,
 .stats-cards-grid-5 {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
 }
 
-@media (max-width: 1200px) {
-  .stats-cards-grid-5 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 800px) {
+@media (max-width: 1100px) {
+  .stats-cards-grid-4,
   .stats-cards-grid-5 {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 600px) {
+  .stats-cards-grid-4,
   .stats-cards-grid-5 {
     grid-template-columns: 1fr;
   }
 }
 
 .stat-empty-chart-note {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--color-muted, #98a1b4);
   height: 24px;
   display: flex;
   align-items: center;
+  margin-top: 4px;
+}
+
+.stat-progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 8px 0 6px;
+}
+
+.stat-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent, #8A96FF), var(--color-success, #52E0A3));
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.stat-missing-link {
+  font-size: 0.75rem;
+  color: var(--color-accent, #8A96FF);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s ease;
+}
+
+.stat-missing-link:hover {
+  text-decoration: underline;
+  color: #a5afff;
+}
+
+.stat-card-subtext {
+  font-size: 0.775rem;
+  color: var(--color-muted, #98a1b4);
+  margin-top: 4px;
 }
 
 /* Premium Stat Card Container */
 .stat-card-premium {
-  border-radius: 24px;
+  border-radius: var(--radius-xl, 16px);
   padding: 1.5rem;
   text-align: left;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(129, 140, 248, 0.18);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-card-dark, #1A2233);
+  border: 1px solid var(--color-border-dark, #2A3441);
+  box-shadow: var(--shadow-card, 0 2px 6px rgba(0, 0, 0, 0.3));
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .stat-card-premium:hover {
-  transform: translateY(-5px);
-  border-color: rgba(129, 140, 248, 0.45);
-  box-shadow: 0 20px 45px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  border-color: var(--color-primary-dark, #818CF8);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
 }
 
-/* Individual Gradient Accent Glows per Card */
-.stat-card-premium.views {
-  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.15), rgba(17, 24, 39, 0.85) 60%);
-}
-
-.stat-card-premium.downloads {
-  background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.15), rgba(17, 24, 39, 0.85) 60%);
-}
-
-.stat-card-premium.visitors {
-  background: radial-gradient(circle at top right, rgba(168, 85, 247, 0.15), rgba(17, 24, 39, 0.85) 60%);
-}
-
-.stat-card-premium.projects {
-  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), rgba(17, 24, 39, 0.85) 60%);
-}
-
-.stat-card-premium.skills {
-  background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.15), rgba(17, 24, 39, 0.85) 60%);
-}
-
+/* Solid card surfaces (no radial gradient washes) */
+.stat-card-premium.views,
+.stat-card-premium.downloads,
+.stat-card-premium.visitors,
+.stat-card-premium.projects,
+.stat-card-premium.skills,
 .stat-card-premium.completion {
-  background: radial-gradient(circle at top right, rgba(236, 72, 153, 0.15), rgba(17, 24, 39, 0.85) 60%);
+  background: var(--color-card-dark, #1A2233);
 }
 
 /* Card Header: Icon & Trend Pill */
@@ -145,7 +164,7 @@
   gap: 4px;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
