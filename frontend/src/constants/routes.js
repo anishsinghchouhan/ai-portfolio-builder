@@ -17,6 +17,7 @@ export const ROUTES = {
 
   // Protected Dashboard Routes
   DASHBOARD: "/dashboard",
+  DASHBOARD_PORTFOLIO: "/dashboard/portfolio",
   DASHBOARD_UPLOAD: "/dashboard/upload",
   DASHBOARD_TEMPLATES: "/dashboard/templates",
   DASHBOARD_BUILDER: "/dashboard/builder/:portfolioId",

@@ -7,7 +7,6 @@ import RecentActivitySection from "../../components/dashboard/RecentActivitySect
 import AISuggestionsPanel from "../../components/dashboard/AISuggestionsPanel";
 import CreatePortfolioModal from "../../components/dashboard/CreatePortfolioModal";
 import RecentPortfoliosSection from "../../components/dashboard/RecentPortfoliosSection";
-import ProductJourneySection from "../../components/dashboard/ProductJourneySection";
 import { useAuth } from "../../hooks/useAuth";
 import { useSummary } from "../../hooks/useSummary";
 import { ROUTES, getBuilderPath, getThemesPath, getPublishPath } from "../../constants/routes";
@@ -179,12 +178,6 @@ export const DashboardHomePage = ({ onNavigate }) => {
           </button>
         </div>
       )}
-
-      {/* "YOUR JOURNEY" STEPPER SECTION */}
-      <ProductJourneySection
-        journey={summary?.journey}
-        onCreatePortfolio={() => setIsCreateModalOpen(true)}
-      />
 
       {/* YOUR PORTFOLIOS SECTION */}
       <RecentPortfoliosSection
