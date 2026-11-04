@@ -82,7 +82,6 @@ export const getPortfolios = catchAsync(async (req, res, next) => {
       slug: true,
       theme: true,
       status: true,
-      content: true,
       viewsCount: true,
       publishedAt: true,
       createdAt: true,
@@ -362,27 +361,38 @@ export const getPublicPortfolioBySlug = catchAsync(async (req, res, next) => {
     const userAgent = req.headers["user-agent"] || "";
     const visitorHash = generateVisitorHash(clientIp, userAgent);
 
-    // Record verified visitor hash into analytics (never raw IP)
-    await prisma.analytics.create({
-      data: {
-        portfolioId: portfolio.id,
-        ipAddress: visitorHash,
-        userAgent: userAgent ? userAgent.slice(0, 255) : null,
-      },
-    });
+    // Count at most one view per visitor per portfolio per 30 minutes
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const recentView = visitorHash
+      ? await prisma.analytics.findFirst({
+          where: {
+            portfolioId: portfolio.id,
+            ipAddress: visitorHash,
+            visitedAt: { gte: thirtyMinutesAgo },
+          },
+        })
+      : null;
 
-    const updatedPortfolio = await prisma.portfolio.update({
-      where: { id: portfolio.id },
-      data: {
-        viewsCount: { increment: 1 },
-      },
-      include: {
-        projects: true,
-      },
-    });
+    if (!recentView) {
+      // Record verified visitor hash into analytics (never raw IP)
+      await prisma.analytics.create({
+        data: {
+          portfolioId: portfolio.id,
+          ipAddress: visitorHash,
+          userAgent: userAgent ? userAgent.slice(0, 255) : null,
+        },
+      });
 
-    finalViewsCount = updatedPortfolio.viewsCount;
-    invalidateDashboardSummaryCache(portfolio.userId);
+      const updatedPortfolio = await prisma.portfolio.update({
+        where: { id: portfolio.id },
+        data: {
+          viewsCount: { increment: 1 },
+        },
+      });
+
+      finalViewsCount = updatedPortfolio.viewsCount;
+      invalidateDashboardSummaryCache(portfolio.userId);
+    }
   }
 
   res.status(200).json({

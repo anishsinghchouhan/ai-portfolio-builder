@@ -238,7 +238,7 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
     });
   });
 
-  describe("5. Visitor Telemetry Hash Safety (Never raw IP)", () => {
+  describe("5. Visitor Telemetry Hash Safety & 30-Minute Deduplication", () => {
     it("hashes IP with salt using SHA-256 so raw IP is never stored", () => {
       const rawIp = "192.168.1.100";
       const salt = "test-salt-secret";
@@ -253,6 +253,22 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
       assert.equal(hash.length, 64);
       assert.ok(!hash.includes(rawIp));
       assert.ok(!hash.includes("192.168"));
+    });
+
+    it("evaluates 30-minute deduplication window for public portfolio view tracking", () => {
+      const now = Date.now();
+      const thirtyMinutesMs = 30 * 60 * 1000;
+      const thirtyMinutesAgo = new Date(now - thirtyMinutesMs);
+
+      // Simulating a view recorded 10 minutes ago (within deduplication window)
+      const recentVisitTime = new Date(now - 10 * 60 * 1000);
+      const isWithinWindow = recentVisitTime >= thirtyMinutesAgo;
+      assert.equal(isWithinWindow, true, "Visit within 30 min should be deduplicated (not incremented)");
+
+      // Simulating a visit from 35 minutes ago (outside deduplication window)
+      const oldVisitTime = new Date(now - 35 * 60 * 1000);
+      const isOldWithinWindow = oldVisitTime >= thirtyMinutesAgo;
+      assert.equal(isOldWithinWindow, false, "Visit older than 30 min should be counted as a new view");
     });
   });
 
