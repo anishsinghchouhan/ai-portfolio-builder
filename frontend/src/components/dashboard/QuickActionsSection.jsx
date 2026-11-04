@@ -44,7 +44,7 @@ export const QuickActionsSection = ({ onActionClick }) => {
     {
       id: "upload_resume",
       title: "Upload Resume",
-      description: "Resume PDF parsing and section extraction coming in Round 2.",
+      description: "Resume PDF parsing and section extraction coming soon.",
       colorTheme: "neutral",
       disabled: true,
       badge: "Coming soon",

@@ -142,7 +142,7 @@
 }
 
 .check-badge {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
@@ -228,7 +228,7 @@
 }
 
 .ring-percentage-label {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #94a3b8;
   text-transform: uppercase;

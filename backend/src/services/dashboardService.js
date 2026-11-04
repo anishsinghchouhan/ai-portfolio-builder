@@ -212,7 +212,7 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       isDone: (profileStrength?.percentage || 0) >= 50,
       isComingSoon: false,
       route: "/dashboard/profile",
-      hint: "Complete at least 50% of your candidate profile details (Threshold: >= 50%)",
+      hint: "Complete your candidate profile details",
     },
     {
       key: "resume",
@@ -220,7 +220,7 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       isDone: false,
       isComingSoon: true,
       route: "/dashboard/upload",
-      hint: "PDF resume upload & ATS parsing (Coming in Round 2)",
+      hint: "PDF resume upload & parsing (Coming soon)",
     },
     {
       key: "ai_analysis",
@@ -228,7 +228,7 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       isDone: false,
       isComingSoon: true,
       route: "/dashboard/upload",
-      hint: "AI portfolio recommendations & scoring (Coming in Round 2)",
+      hint: "AI portfolio recommendations & scoring (Coming soon)",
     },
     {
       key: "portfolio",
@@ -260,7 +260,7 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       isDone: false,
       isComingSoon: true,
       route: primaryPortfolio ? `/dashboard/publish/${primaryPortfolio.id}` : "/dashboard",
-      hint: "Connect your custom domain (Coming in Round 2)",
+      hint: "Connect your custom domain (Coming soon)",
     },
     {
       key: "pdf_export",
@@ -268,7 +268,7 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       isDone: false,
       isComingSoon: true,
       route: "/dashboard",
-      hint: "Download high-res PDF portfolio (Coming in Round 2)",
+      hint: "Download PDF portfolio (Coming soon)",
     },
   ];
 
@@ -295,6 +295,72 @@ export const calculateJourney = ({ user, primaryPortfolio, counts, profileStreng
       hint: s.hint,
     };
   });
+};
+
+/**
+ * Build real activity timeline from portfolio and resume creation/update/publish events.
+ *
+ * @param {object} params
+ * @param {Array} params.recentPortfolios
+ * @param {object|null} params.latestResume
+ * @returns {Array<{ id: string, type: string, title: string, description: string, timestamp: string, tag: string }>}
+ */
+export const buildRecentActivity = ({ recentPortfolios = [], latestResume = null }) => {
+  const events = [];
+
+  for (const p of recentPortfolios) {
+    if (p.createdAt) {
+      events.push({
+        id: `create_${p.id}`,
+        type: "create",
+        title: `Created portfolio "${p.title}"`,
+        description: `Draft started with /${p.slug}`,
+        timestamp: p.createdAt,
+        tag: "Portfolio",
+        portfolioId: p.id,
+      });
+    }
+
+    if (p.publishedAt && p.status === "PUBLISHED") {
+      events.push({
+        id: `publish_${p.id}`,
+        type: "publish",
+        title: `Published portfolio "${p.title}"`,
+        description: `Live at /${p.slug}`,
+        timestamp: p.publishedAt,
+        tag: "Deployment",
+        portfolioId: p.id,
+      });
+    } else if (p.updatedAt && p.createdAt) {
+      const createdTime = new Date(p.createdAt).getTime();
+      const updatedTime = new Date(p.updatedAt).getTime();
+      if (updatedTime - createdTime > 120_000) {
+        events.push({
+          id: `update_${p.id}`,
+          type: "update",
+          title: `Updated portfolio "${p.title}"`,
+          description: `Saved latest content changes`,
+          timestamp: p.updatedAt,
+          tag: "Edit",
+          portfolioId: p.id,
+        });
+      }
+    }
+  }
+
+  if (latestResume && latestResume.createdAt) {
+    events.push({
+      id: `resume_${latestResume.id}`,
+      type: "resume",
+      title: `Uploaded resume "${latestResume.fileName}"`,
+      description: `Resume parsed and attached`,
+      timestamp: latestResume.createdAt,
+      tag: "Resume",
+    });
+  }
+
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return events;
 };
 
 // ─── IN-MEMORY SUMMARY CACHE (30-60s TTL keyed by userId) ───────────────────
@@ -438,6 +504,8 @@ export const getDashboardSummaryForUser = async (userId) => {
             theme: true,
             viewsCount: true,
             updatedAt: true,
+            createdAt: true,
+            publishedAt: true,
             _count: {
               select: { projects: true },
             },
@@ -578,6 +646,7 @@ export const getDashboardSummaryForUser = async (userId) => {
           missing: readiness?.missing || [],
         },
         journey,
+        recentActivity: buildRecentActivity({ recentPortfolios, latestResume }),
       };
 
       // Store in memory cache with current timestamp ONLY on successful retrieval

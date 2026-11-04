@@ -60,12 +60,27 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
 
   const getStatusBadge = () => {
     if (percent === 100) {
-      return <span className="readiness-pill-badge status-ready">🟢 100% Ready</span>;
+      return (
+        <span className="readiness-pill-badge status-ready" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="3" /></svg>
+          <span>100% Ready</span>
+        </span>
+      );
     }
     if (percent > 0) {
-      return <span className="readiness-pill-badge status-progress">🟡 {percent.toLocaleString()}% In Progress</span>;
+      return (
+        <span className="readiness-pill-badge status-progress" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="3" /></svg>
+          <span>{percent.toLocaleString()}% In Progress</span>
+        </span>
+      );
     }
-    return <span className="readiness-pill-badge status-setup">⚪ 0% Setup Required</span>;
+    return (
+      <span className="readiness-pill-badge status-setup" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="3" /></svg>
+        <span>0% Setup Required</span>
+      </span>
+    );
   };
 
   const isCheckCompleted = (key) => completedSections.some((item) => (typeof item === "string" ? item === key : item?.key === key));
@@ -156,7 +171,10 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
           </div>
 
           <div className="last-saved-time">
-            <span>⏱️</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
             <span>{formatLastUpdated(portfolio?.updatedAt)}</span>
           </div>
         </div>
@@ -167,8 +185,8 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
             {/* Completed Checklist */}
             <div className="checklist-box completed">
               <h4>
-                <span>✓ Completed Sections</span>
-                <span style={{ fontSize: "0.7rem", color: "#34d399" }}>
+                <span>Completed Sections</span>
+                <span style={{ fontSize: "0.75rem", color: "#34d399" }}>
                   ({completedSections.length.toLocaleString()})
                 </span>
               </h4>
@@ -191,8 +209,8 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
             {/* Missing Checklist: Each missing item is a button linking to its real route */}
             <div className="checklist-box missing">
               <h4>
-                <span>⚠️ Recommended Additions</span>
-                <span style={{ fontSize: "0.7rem", color: "#fbbf24" }}>
+                <span>Recommended Additions</span>
+                <span style={{ fontSize: "0.75rem", color: "#fbbf24" }}>
                   ({missingSections.length.toLocaleString()})
                 </span>
               </h4>
@@ -213,7 +231,7 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
                   ))
                 ) : (
                   <li className="checklist-item-row" style={{ color: "#34d399" }}>
-                    🎉 All recommended items completed!
+                    All recommended items completed!
                   </li>
                 )}
               </ul>
@@ -222,11 +240,24 @@ export const PortfolioStatusWidget = ({ readiness, portfolio, onPublish }) => {
 
           {/* Dynamic Suggestion Banner inside Widget */}
           <div className="widget-ai-suggestion-box">
-            <div>
-              <strong>💡 Next Step:</strong>{" "}
-              {missingSections.length > 0
-                ? `${missingSections[0].label}. Click above to complete it.`
-                : "Your portfolio is fully populated and ready for recruiter review."}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "#fbbf24", flexShrink: 0 }}>
+                <path d="M12 2v1" />
+                <path d="M12 21v1" />
+                <path d="M4.93 4.93l.7.7" />
+                <path d="M18.36 18.36l.7.7" />
+                <path d="M2 12h1" />
+                <path d="M21 12h1" />
+                <path d="M4.93 19.07l.7-.7" />
+                <path d="M18.36 5.64l.7-.7" />
+                <circle cx="12" cy="12" r="5" />
+              </svg>
+              <span>
+                <strong>Next step:</strong>{" "}
+                {missingSections.length > 0
+                  ? `${missingSections[0].label}. Click above to complete it.`
+                  : "Your portfolio is fully populated and ready for recruiter review."}
+              </span>
             </div>
           </div>
         </div>

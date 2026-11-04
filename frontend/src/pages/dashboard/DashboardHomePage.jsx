@@ -80,14 +80,24 @@ export const DashboardHomePage = ({ onNavigate }) => {
   };
 
   return (
-    <div className="dash-home-container" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div className="dash-home-container">
       {/* 1. HEADER ROW */}
       <div className="welcome-banner-row">
         <div className="welcome-text-group">
           <div className="welcome-date-label">{formattedDate}</div>
-          <h1>{getGreeting()}, {userName} 👋</h1>
+          <h1>{getGreeting()}, {userName}</h1>
           <div className="welcome-next-step-hint">
-            <span style={{ color: "var(--color-accent, #8A96FF)" }}>💡</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--color-accent, #8A96FF)", flexShrink: 0 }}>
+              <path d="M12 2v1" />
+              <path d="M12 21v1" />
+              <path d="M4.93 4.93l.7.7" />
+              <path d="M18.36 18.36l.7.7" />
+              <path d="M2 12h1" />
+              <path d="M21 12h1" />
+              <path d="M4.93 19.07l.7-.7" />
+              <path d="M18.36 5.64l.7-.7" />
+              <circle cx="12" cy="12" r="5" />
+            </svg>
             <span>{nextStepHint}</span>
           </div>
         </div>
@@ -100,7 +110,11 @@ export const DashboardHomePage = ({ onNavigate }) => {
               rel="noopener noreferrer"
               className="btn-view-public-page"
             >
-              👁️ View public page ↗
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+              <span>View public page</span>
             </a>
           )}
           <button
@@ -122,7 +136,10 @@ export const DashboardHomePage = ({ onNavigate }) => {
               boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
             }}
           >
-            <span>＋</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
             <span>New portfolio</span>
           </button>
         </div>
@@ -146,7 +163,11 @@ export const DashboardHomePage = ({ onNavigate }) => {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             <span>{syncError}</span>
           </div>
           <button
@@ -185,7 +206,11 @@ export const DashboardHomePage = ({ onNavigate }) => {
       {error && !loading && (
         <div className="dashboard-error-card">
           <div className="dashboard-error-info">
-            <span className="dashboard-error-icon">⚠️</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "#f87171", flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
             <div className="dashboard-error-text">
               <h3>Unable to load dashboard data</h3>
               <p>{error}</p>
@@ -210,39 +235,37 @@ export const DashboardHomePage = ({ onNavigate }) => {
         profileStrength={summary?.profileStrength}
       />
 
-      {/* 4. TWO-COLUMN SECTION */}
-      <div className="dash-two-col-grid">
-        {/* Left Column: Recent Portfolios (up to 5 or dashed new-user card) */}
-        <div className="dash-col-left">
-          <RecentPortfoliosSection
-            portfolios={summary?.recentPortfolios}
-            onCreateClick={() => setIsCreateModalOpen(true)}
-          />
-        </div>
+      {/* 4. RECENT PORTFOLIOS (Full width) */}
+      <RecentPortfoliosSection
+        portfolios={summary?.recentPortfolios}
+        onCreateClick={() => setIsCreateModalOpen(true)}
+      />
 
-        {/* Right Column: Portfolio Readiness (6 checks + details) & Recent Activity */}
-        <div className="dash-col-right" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <PortfolioStatusWidget
-            readiness={summary?.readiness}
-            portfolio={summary?.primaryPortfolio}
-            onPublish={() => {
-              if (summary?.primaryPortfolio?.id) {
-                navigate(getPublishPath(summary.primaryPortfolio.id));
-              } else {
-                setIsCreateModalOpen(true);
-              }
-            }}
-          />
-          <RecentActivitySection />
-        </div>
+      {/* 5. BALANCED TWO-COLUMN ROW: READINESS WIDGET & RECENT ACTIVITY */}
+      <div className="dash-two-col-balanced-grid">
+        <PortfolioStatusWidget
+          readiness={summary?.readiness}
+          portfolio={summary?.primaryPortfolio}
+          onPublish={() => {
+            if (summary?.primaryPortfolio?.id) {
+              navigate(getPublishPath(summary.primaryPortfolio.id));
+            } else {
+              setIsCreateModalOpen(true);
+            }
+          }}
+        />
+        <RecentActivitySection
+          activities={summary?.recentActivity}
+          portfolios={summary?.recentPortfolios}
+        />
       </div>
 
-      {/* 5. QUICK ACTIONS (4) */}
+      {/* 6. QUICK ACTIONS (4) */}
       <QuickActionsSection
         onActionClick={handleQuickAction}
       />
 
-      {/* 6. CREATE PORTFOLIO MODAL */}
+      {/* 7. CREATE PORTFOLIO MODAL */}
       <CreatePortfolioModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

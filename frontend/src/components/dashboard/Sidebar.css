@@ -116,7 +116,7 @@
 }
 
 .sidebar-section-title {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-text-muted-dark);
   text-transform: uppercase;
@@ -184,7 +184,7 @@
 /* Notification & Tag Badges */
 .nav-badge-pill {
   margin-left: auto;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 0.15rem 0.55rem;
   border-radius: var(--radius-full);
@@ -289,9 +289,11 @@
 }
 
 .user-role-text {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mobile-sidebar-backdrop {

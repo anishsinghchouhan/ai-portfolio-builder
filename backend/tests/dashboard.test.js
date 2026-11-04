@@ -7,6 +7,7 @@ import {
   calculateProfileStrength,
   calculateReadiness,
   calculateJourney,
+  buildRecentActivity,
   invalidateDashboardSummaryCache,
 } from "../src/services/dashboardService.js";
 
@@ -227,7 +228,44 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
     });
   });
 
-  describe("4. Cache Invalidation", () => {
+  describe("4. Recent Activity Timeline Builder", () => {
+    it("returns empty array when user has no portfolios or resumes", () => {
+      const activities = buildRecentActivity({ recentPortfolios: [], latestResume: null });
+      assert.equal(Array.isArray(activities), true);
+      assert.equal(activities.length, 0);
+    });
+
+    it("builds timeline from real portfolio timestamps and sorts newest first", () => {
+      const recentPortfolios = [
+        {
+          id: "p_1",
+          title: "sss",
+          slug: "sss-portfolio",
+          status: "DRAFT",
+          createdAt: new Date("2026-11-03T10:00:00Z").toISOString(),
+          updatedAt: new Date("2026-11-03T10:00:00Z").toISOString(),
+        },
+        {
+          id: "p_2",
+          title: "wee",
+          slug: "wee-portfolio",
+          status: "PUBLISHED",
+          createdAt: new Date("2026-11-03T11:00:00Z").toISOString(),
+          updatedAt: new Date("2026-11-03T11:30:00Z").toISOString(),
+          publishedAt: new Date("2026-11-03T11:30:00Z").toISOString(),
+        },
+      ];
+
+      const activities = buildRecentActivity({ recentPortfolios, latestResume: null });
+      assert.ok(activities.length >= 2, "Expected at least 2 events for 2 portfolios");
+      // Newest event should be the publish of wee at 11:30
+      assert.equal(activities[0].title, 'Published portfolio "wee"');
+      // Should include creation of sss
+      assert.ok(activities.some((a) => a.title === 'Created portfolio "sss"'));
+    });
+  });
+
+  describe("5. Cache Invalidation", () => {
     it("invalidateDashboardSummaryCache function is exported and callable without throwing", () => {
       assert.doesNotThrow(() => {
         invalidateDashboardSummaryCache("user_test_123");

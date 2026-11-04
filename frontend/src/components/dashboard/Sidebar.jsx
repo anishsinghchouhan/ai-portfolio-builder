@@ -281,7 +281,7 @@ export const Sidebar = ({
         )}
         <div className="user-text-info">
           <span className="user-name-text" title={userName}>{userName}</span>
-          <span className="user-role-text">{appUser?.role || "Member"}</span>
+          {userEmail && <span className="user-role-text" title={userEmail}>{userEmail}</span>}
         </div>
       </div>
     </aside>
