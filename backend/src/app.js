@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes.js";
 import portfolioRoutes from "./routes/portfolioRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import resumeRoutes from "./routes/resumeRoutes.js";
 
 const app = express();
 
@@ -110,6 +111,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/portfolios", portfolioRoutes);
 app.use("/api/v1/public", publicRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/resumes", resumeRoutes);
 
 // 9. 404 Route Not Found Middleware
 app.use(notFoundHandler);

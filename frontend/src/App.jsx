@@ -23,7 +23,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 // Protected Dashboard Pages
 import DashboardHomePage from "./pages/dashboard/DashboardHomePage";
 import PortfolioPage from "./pages/dashboard/PortfolioPage";
-import ResumeUploadPage from "./pages/dashboard/ResumeUploadPage";
+import ResumeAIPage from "./pages/dashboard/ResumeAIPage";
 import PortfolioBuilderDashboard from "./pages/dashboard/PortfolioBuilderDashboard";
 import ThemeCustomizationPage from "./pages/dashboard/ThemeCustomizationPage";
 import PublishPortfolioPage from "./pages/dashboard/PublishPortfolioPage";
@@ -179,7 +179,8 @@ export function App() {
               <Route element={<DashboardLayout />}>
                 <Route path={ROUTES.DASHBOARD} element={<DashboardHomePage />} />
                 <Route path={ROUTES.DASHBOARD_PORTFOLIO} element={<PortfolioPage />} />
-                <Route path={ROUTES.DASHBOARD_UPLOAD} element={<ResumeUploadPage />} />
+                <Route path={ROUTES.DASHBOARD_RESUME} element={<ResumeAIPage />} />
+                <Route path={ROUTES.DASHBOARD_UPLOAD} element={<ResumeAIPage />} />
                 <Route path={ROUTES.DASHBOARD_TEMPLATES} element={<TemplatesMarketplacePage />} />
                 <Route path={ROUTES.DASHBOARD_BUILDER} element={<PortfolioBuilderDashboard />} />
                 <Route path="/dashboard/builder" element={<PortfolioBuilderDashboard />} />

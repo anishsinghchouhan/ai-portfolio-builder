@@ -32,7 +32,7 @@ export const DashboardLayout = () => {
   // Derive active menu item from current route
   const getActiveItem = () => {
     const path = location.pathname;
-    if (path.startsWith("/dashboard/upload")) return "resume";
+    if (path.startsWith("/dashboard/resume") || path.startsWith("/dashboard/upload")) return "resume";
     if (
       path.startsWith("/dashboard/portfolio") ||
       path.startsWith("/dashboard/builder") ||
@@ -52,7 +52,7 @@ export const DashboardLayout = () => {
   const getBreadcrumbPath = () => {
     const path = location.pathname;
     if (path.startsWith("/dashboard/portfolio")) return ["Dashboard", "Portfolio"];
-    if (path.startsWith("/dashboard/upload")) return ["Dashboard", "Resume & AI"];
+    if (path.startsWith("/dashboard/resume") || path.startsWith("/dashboard/upload")) return ["Dashboard", "Resume & AI"];
     if (path.startsWith("/dashboard/builder")) return ["Dashboard", "Portfolio Builder"];
     if (path.startsWith("/dashboard/themes")) return ["Dashboard", "Theme Customization"];
     if (path.startsWith("/dashboard/publish")) return ["Dashboard", "Publish & Domain"];
@@ -67,7 +67,7 @@ export const DashboardLayout = () => {
     const routeMap = {
       dashboard: ROUTES.DASHBOARD,
       portfolio: ROUTES.DASHBOARD_PORTFOLIO,
-      resume: ROUTES.DASHBOARD_UPLOAD,
+      resume: ROUTES.DASHBOARD_RESUME,
       templates: ROUTES.DASHBOARD_TEMPLATES,
       analytics: ROUTES.DASHBOARD_ANALYTICS,
       settings: ROUTES.DASHBOARD_SETTINGS,
