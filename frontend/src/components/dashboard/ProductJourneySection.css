@@ -20,21 +20,21 @@
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
-  color: #ffffff;
+  color: var(--color-text-primary-dark, #F1F5F9);
 }
 
 .journey-title-group p {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--color-text-secondary-dark, #CBD5E1);
   margin: 4px 0 0 0;
 }
 
 .btn-journey-info-toggle {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-dark, #2A3441);
+  color: var(--color-text-primary-dark, #F1F5F9);
   padding: 0.4rem 0.9rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-full, 9999px);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -42,18 +42,20 @@
 }
 
 .btn-journey-info-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-primary-dark, #818CF8);
+  color: #FFFFFF;
 }
 
 .journey-explanation-card {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 14px;
+  background: var(--color-card-dark, #1A2233);
+  border: 1px solid var(--color-border-dark, #2A3441);
+  border-radius: var(--radius-xl, 16px);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: var(--color-text-primary-dark, #F1F5F9);
+  box-shadow: var(--shadow-md, 0 4px 8px rgba(0, 0, 0, 0.2));
   animation: fadeIn 0.2s ease-in-out;
 }
 
@@ -66,7 +68,7 @@
 }
 
 .journey-explanation-card li strong {
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 /* Stepper <ol> Grid */
@@ -86,16 +88,17 @@
 
 .step-card-content {
   width: 100%;
-  border-radius: 16px;
+  border-radius: var(--radius-xl, 16px);
   padding: 1.15rem;
-  background: rgba(17, 24, 39, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-card-dark, #1A2233);
+  border: 1px solid var(--color-border-dark, #2A3441);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.75rem;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  opacity: 1; /* Explicit full opacity — no washed out fading */
 }
 
 .step-card-content.interactive {
@@ -104,32 +107,32 @@
 
 .step-card-content.interactive:hover {
   transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: var(--color-primary-dark, #818CF8);
   box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
 }
 
 .step-card-content.interactive:focus-visible {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+  border-color: var(--color-primary-dark, #818CF8);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.35);
 }
 
 .step-card-content.disabled {
-  opacity: 0.6;
+  opacity: 1; /* Full opacity ensures text remains sharp and readable */
   cursor: not-allowed;
-  background: rgba(15, 23, 42, 0.4);
-  border-style: dashed;
+  background: var(--color-surface-dark, #111827);
+  border: 1px dashed var(--color-border-dark, #2A3441);
 }
 
 /* Status variants */
 .journey-step-item.current .step-card-content {
-  border-color: #6366f1;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(17, 24, 39, 0.9));
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 8px 20px rgba(99, 102, 241, 0.15);
+  border-color: var(--color-primary-dark, #818CF8);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), var(--color-card-dark, #1A2233));
+  box-shadow: 0 0 0 1px var(--color-primary-dark, #818CF8), 0 8px 20px rgba(79, 70, 229, 0.2);
 }
 
 .journey-step-item.done .step-card-content {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: var(--color-success, #16A34A);
 }
 
 .step-indicator-row {
@@ -143,8 +146,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-primary-dark, #F1F5F9);
   font-size: 0.75rem;
   font-weight: 700;
   display: flex;
@@ -153,13 +156,13 @@
 }
 
 .journey-step-item.current .step-number-pill {
-  background: #6366f1;
-  color: #ffffff;
+  background: var(--color-primary, #4F46E5);
+  color: #FFFFFF;
 }
 
 .journey-step-item.done .step-number-pill {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--color-success, #16A34A);
+  color: #FFFFFF;
 }
 
 .step-main-info {
@@ -183,13 +186,13 @@
 .step-label-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--color-text-primary-dark, #F1F5F9);
   margin: 0;
 }
 
 .step-hint-text {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-secondary-dark, #CBD5E1);
   margin: 0;
   line-height: 1.35;
   display: -webkit-box;
@@ -201,13 +204,105 @@
 .step-cta-hint {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #818cf8;
+  color: var(--color-primary-dark, #818CF8);
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--color-border-dark, #2A3441);
 }
 
 .journey-step-item.done .step-cta-hint {
-  color: #34d399;
+  color: var(--color-success-dark, #4ADE80);
+}
+
+/* ==========================================================================
+   Light Theme Support
+   ========================================================================== */
+.dashboard-root.light .journey-title-group h2 {
+  color: var(--color-text-primary, #0F172A);
+}
+
+.dashboard-root.light .journey-title-group p {
+  color: var(--color-text-secondary, #475569);
+}
+
+.dashboard-root.light .btn-journey-info-toggle {
+  background: var(--color-surface, #F8FAFC);
+  border-color: var(--color-border, #E2E8F0);
+  color: var(--color-text-secondary, #475569);
+}
+
+.dashboard-root.light .btn-journey-info-toggle:hover {
+  background: #FFFFFF;
+  border-color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #4F46E5);
+}
+
+.dashboard-root.light .journey-explanation-card {
+  background: #FFFFFF;
+  border-color: var(--color-border, #E2E8F0);
+  color: var(--color-text-primary, #0F172A);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
+}
+
+.dashboard-root.light .journey-explanation-card li strong {
+  color: var(--color-text-primary, #0F172A);
+}
+
+.dashboard-root.light .step-card-content {
+  background: var(--color-card, #FFFFFF);
+  border-color: var(--color-border, #E2E8F0);
+  box-shadow: var(--shadow-card, 0 2px 6px rgba(15, 23, 42, 0.06));
+}
+
+.dashboard-root.light .step-card-content.interactive:hover {
+  border-color: var(--color-primary, #4F46E5);
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(15, 23, 42, 0.10));
+}
+
+.dashboard-root.light .step-card-content.disabled {
+  background: var(--color-surface, #F8FAFC);
+  border-color: var(--color-border-strong, #CBD5E1);
+}
+
+.dashboard-root.light .journey-step-item.current .step-card-content {
+  border-color: var(--color-primary, #4F46E5);
+  background: linear-gradient(135deg, var(--color-primary-subtle, #EEF2FF), #FFFFFF);
+  box-shadow: 0 0 0 1px var(--color-primary, #4F46E5), var(--shadow-md, 0 4px 8px rgba(79, 70, 229, 0.1));
+}
+
+.dashboard-root.light .journey-step-item.done .step-card-content {
+  border-color: var(--color-success, #16A34A);
+}
+
+.dashboard-root.light .step-number-pill {
+  background: var(--color-border, #E2E8F0);
+  color: var(--color-text-secondary, #475569);
+}
+
+.dashboard-root.light .journey-step-item.current .step-number-pill {
+  background: var(--color-primary, #4F46E5);
+  color: #FFFFFF;
+}
+
+.dashboard-root.light .journey-step-item.done .step-number-pill {
+  background: var(--color-success, #16A34A);
+  color: #FFFFFF;
+}
+
+.dashboard-root.light .step-label-title {
+  color: var(--color-text-primary, #0F172A);
+}
+
+.dashboard-root.light .step-hint-text {
+  color: var(--color-text-secondary, #475569);
+}
+
+.dashboard-root.light .step-cta-hint {
+  color: var(--color-primary, #4F46E5);
+  border-top-color: var(--color-border, #E2E8F0);
+}
+
+.dashboard-root.light .journey-step-item.done .step-cta-hint {
+  color: var(--color-success, #16A34A);
 }
 
 /* Mobile & Tablet Responsiveness: Vertical Stepper */
@@ -223,4 +318,3 @@
     gap: 0.75rem;
   }
 }
-
