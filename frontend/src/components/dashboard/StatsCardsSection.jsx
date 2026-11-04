@@ -1,9 +1,23 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { ROUTES } from "../../constants/routes";
 import "./StatsCardsSection.css";
 
-export const StatsCardsSection = ({ counts, analytics }) => {
+export const StatsCardsSection = ({ counts, analytics, profileStrength }) => {
   const last7Days = Array.isArray(analytics?.last7Days) ? analytics.last7Days : [];
   const hasViewsTraffic = last7Days.some((d) => Number(d.views) > 0);
+  const totalViews = Number(analytics?.views || 0);
+  const uniqueVisitors = Number(analytics?.uniqueVisitors || 0);
+  const publishedCount = Number(counts?.published || 0);
+  const portfoliosCount = Number(counts?.portfolios || 0);
+  const draftCount = Math.max(0, portfoliosCount - publishedCount);
+
+  // Profile strength data
+  const score = profileStrength?.score ?? 0;
+  const totalFields = profileStrength?.total ?? 9;
+  const percentage = profileStrength?.percentage ?? Math.round((score / totalFields) * 100);
+  const missingFields = profileStrength?.missingFields || [];
+  const firstMissingField = missingFields.length > 0 ? missingFields[0] : null;
 
   // Dynamically compute real sparkline path when views > 0 in the last 7 days
   const maxViews = Math.max(...last7Days.map((d) => Number(d.views) || 0), 1);
@@ -17,125 +31,120 @@ export const StatsCardsSection = ({ counts, analytics }) => {
   const strokePath = points.length > 0 ? `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}` : "";
   const areaPath = points.length > 0 ? `M 0,46 L ${points.map((p) => `${p.x},${p.y}`).join(" L ")} L 240,46 Z` : "";
 
-  const cards = [
-    {
-      id: "views",
-      title: "Portfolio Views",
-      value: Number(analytics?.views || 0).toLocaleString(),
-      colorTheme: "views",
-      iconColor: "indigo",
-      hasChart: hasViewsTraffic,
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-      ),
-    },
-    {
-      id: "downloads",
-      title: "Resume Downloads",
-      value: Number(analytics?.downloads || 0).toLocaleString(),
-      colorTheme: "downloads",
-      iconColor: "cyan",
-      hasChart: false,
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-      ),
-    },
-    {
-      id: "visitors",
-      title: "Unique Visitors",
-      value: Number(analytics?.uniqueVisitors || 0).toLocaleString(),
-      colorTheme: "visitors",
-      iconColor: "purple",
-      hasChart: false,
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      ),
-    },
-    {
-      id: "projects",
-      title: "Showcase Projects",
-      value: Number(counts?.projects || 0).toLocaleString(),
-      colorTheme: "projects",
-      iconColor: "emerald",
-      hasChart: false,
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-        </svg>
-      ),
-    },
-    {
-      id: "skills",
-      title: "Technical Skills",
-      value: Number(counts?.skills || 0).toLocaleString(),
-      colorTheme: "skills",
-      iconColor: "amber",
-      hasChart: false,
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ),
-    },
-  ];
+  const isNewUser = portfoliosCount === 0 || publishedCount === 0;
 
   return (
-    <section className="stats-section-root">
-      <div className="stats-cards-grid-5">
-        {cards.map((card) => (
-          <div key={card.id} className={`stat-card-premium ${card.colorTheme}`}>
-            {/* Top Row: Icon */}
-            <div className="stat-card-top-row">
-              <div className={`stat-icon-wrapper ${card.iconColor}`}>{card.icon}</div>
+    <section className="stats-section-root" aria-label="Portfolio Performance KPIs">
+      <div className="stats-cards-grid-4">
+        {/* CARD 1: Views (last 7 days + sparkline) */}
+        <div className="stat-card-premium views">
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper indigo">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
             </div>
-
-            {/* Middle Row: Title & Value */}
-            <div className="stat-card-middle">
-              <div className="stat-card-title">{card.title}</div>
-              <h3 className="stat-card-value">{card.value}</h3>
+          </div>
+          <div className="stat-card-middle">
+            <div className="stat-card-title">Views (Last 7 Days)</div>
+            <h3 className="stat-card-value">{totalViews.toLocaleString()}</h3>
+          </div>
+          {hasViewsTraffic && strokePath ? (
+            <div className="stat-mini-chart">
+              <svg viewBox="0 0 240 46" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="realViewsGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={areaPath} fill="url(#realViewsGrad)" />
+                <path
+                  d={strokePath}
+                  fill="none"
+                  stroke="#818cf8"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
+          ) : (
+            <div className="stat-empty-chart-note">
+              <span>{isNewUser ? "Appear after you publish" : "0 views in past 7 days"}</span>
+            </div>
+          )}
+        </div>
 
-            {/* Bottom: Only show chart if last7Days has real views > 0 */}
-            {card.id === "views" && (
-              card.hasChart && strokePath ? (
-                <div className="stat-mini-chart">
-                  <svg viewBox="0 0 240 46" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="realViewsGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#818cf8" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={areaPath} fill="url(#realViewsGrad)" />
-                    <path
-                      d={strokePath}
-                      fill="none"
-                      stroke="#818cf8"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-              ) : (
-                <div className="stat-empty-chart-note">
-                  <span>0 views past 7 days</span>
-                </div>
-              )
+        {/* CARD 2: Unique Visitors */}
+        <div className="stat-card-premium visitors">
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper purple">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
+          <div className="stat-card-middle">
+            <div className="stat-card-title">Unique Visitors</div>
+            <h3 className="stat-card-value">{uniqueVisitors.toLocaleString()}</h3>
+          </div>
+          <div className="stat-card-subtext">
+            {isNewUser ? "Appear after you publish" : `${uniqueVisitors} verified visitors`}
+          </div>
+        </div>
+
+        {/* CARD 3: Portfolios (Published / Draft count) */}
+        <div className="stat-card-premium projects">
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper emerald">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+            </div>
+          </div>
+          <div className="stat-card-middle">
+            <div className="stat-card-title">Portfolios</div>
+            <h3 className="stat-card-value">{portfoliosCount}</h3>
+          </div>
+          <div className="stat-card-subtext">
+            {publishedCount} published • {draftCount} draft
+          </div>
+        </div>
+
+        {/* CARD 4: Profile Strength (Progress bar, x of 9 fields, link to missing field) */}
+        <div className="stat-card-premium completion">
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          </div>
+          <div className="stat-card-middle">
+            <div className="stat-card-title">Profile Strength</div>
+            <h3 className="stat-card-value">{percentage}%</h3>
+          </div>
+          <div className="stat-progress-bar-bg" role="progressbar" aria-valuenow={percentage} aria-valuemin="0" aria-valuemax="100">
+            <div className="stat-progress-bar-fill" style={{ width: `${percentage}%` }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+            <span className="stat-card-subtext">{score} of {totalFields} fields</span>
+            {firstMissingField ? (
+              <Link to={ROUTES.DASHBOARD_PROFILE} className="stat-missing-link" title={`Add missing ${firstMissingField.label}`}>
+                + {firstMissingField.label} →
+              </Link>
+            ) : (
+              <span style={{ fontSize: "0.75rem", color: "var(--color-success, #52E0A3)" }}>Complete ✓</span>
             )}
           </div>
-        ))}
+        </div>
       </div>
     </section>
   );

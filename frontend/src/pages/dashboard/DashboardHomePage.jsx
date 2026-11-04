@@ -1,22 +1,32 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import ProductJourneySection from "../../components/dashboard/ProductJourneySection";
 import StatsCardsSection from "../../components/dashboard/StatsCardsSection";
-import QuickActionsSection from "../../components/dashboard/QuickActionsSection";
+import RecentPortfoliosSection from "../../components/dashboard/RecentPortfoliosSection";
 import PortfolioStatusWidget from "../../components/dashboard/PortfolioStatusWidget";
 import RecentActivitySection from "../../components/dashboard/RecentActivitySection";
-import AISuggestionsPanel from "../../components/dashboard/AISuggestionsPanel";
+import QuickActionsSection from "../../components/dashboard/QuickActionsSection";
 import CreatePortfolioModal from "../../components/dashboard/CreatePortfolioModal";
-import RecentPortfoliosSection from "../../components/dashboard/RecentPortfoliosSection";
 import { useAuth } from "../../hooks/useAuth";
 import { useSummary } from "../../hooks/useSummary";
-import { ROUTES, getBuilderPath, getThemesPath, getPublishPath } from "../../constants/routes";
+import { ROUTES, getPublishPath } from "../../constants/routes";
 import "./DashboardHomePage.css";
 
 export const DashboardHomePage = ({ onNavigate }) => {
   const { user, appUser, syncError } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { summary, loading, error, refetch } = useSummary();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Check URL query parameters: ?action=create-portfolio
+  useEffect(() => {
+    if (searchParams.get("action") === "create-portfolio") {
+      setIsCreateModalOpen(true);
+      searchParams.delete("action");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const userName = user?.user_metadata?.full_name || appUser?.fullName || user?.email?.split("@")[0] || "User";
 
@@ -27,47 +37,41 @@ export const DashboardHomePage = ({ onNavigate }) => {
     return "Good evening";
   };
 
-  const handleQuickAction = (actionId) => {
-    const primaryId = summary?.primaryPortfolio?.id;
+  const formattedDate = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
+  // Calculate next step hint from backend journey
+  const currentJourneyStep = summary?.journey?.find((step) => step.status === "current");
+  const nextStepHint = currentJourneyStep
+    ? `Next step: ${currentJourneyStep.hint || currentJourneyStep.label}`
+    : "Your portfolio is in great shape!";
+
+  // Check for any live published portfolio
+  const publishedPortfolio = summary?.recentPortfolios?.find((p) => p.status === "PUBLISHED") ||
+    (summary?.primaryPortfolio?.status === "PUBLISHED" ? summary.primaryPortfolio : null);
+
+  const handleQuickAction = (actionId) => {
     if (actionId === "create_portfolio") {
       setIsCreateModalOpen(true);
       return;
     }
 
-    if (actionId === "edit_portfolio") {
-      if (primaryId) navigate(getBuilderPath(primaryId));
-      else setIsCreateModalOpen(true);
+    if (actionId === "edit_profile") {
+      navigate(ROUTES.DASHBOARD_PROFILE);
       return;
     }
 
-    if (actionId === "change_theme") {
-      if (primaryId) navigate(getThemesPath(primaryId));
-      else setIsCreateModalOpen(true);
+    if (actionId === "browse_templates") {
+      navigate(ROUTES.DASHBOARD_TEMPLATES);
       return;
     }
 
-    if (
-      actionId === "publish_portfolio" ||
-      actionId === "share_portfolio" ||
-      actionId === "custom_domain"
-    ) {
-      if (primaryId) navigate(getPublishPath(primaryId));
-      else setIsCreateModalOpen(true);
-      return;
-    }
-
-    if (
-      actionId === "upload_resume" ||
-      actionId === "download_resume" ||
-      actionId === "ai_improve_resume"
-    ) {
-      navigate(ROUTES.DASHBOARD_UPLOAD);
-      return;
-    }
-
-    if (actionId === "view_analytics") {
-      navigate(ROUTES.DASHBOARD_ANALYTICS);
+    if (actionId === "upload_resume") {
+      // Disabled / Coming soon
       return;
     }
 
@@ -76,37 +80,52 @@ export const DashboardHomePage = ({ onNavigate }) => {
   };
 
   return (
-    <>
-      {/* Welcome Banner */}
+    <div className="dash-home-container" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      {/* 1. HEADER ROW */}
       <div className="welcome-banner-row">
         <div className="welcome-text-group">
+          <div className="welcome-date-label">{formattedDate}</div>
           <h1>{getGreeting()}, {userName} 👋</h1>
-          <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.95rem", margin: "6px 0 0" }}>
-            Welcome to your portfolio workspace. Manage, build, and publish your candidate profile.
-          </p>
+          <div className="welcome-next-step-hint">
+            <span style={{ color: "var(--color-accent, #8A96FF)" }}>💡</span>
+            <span>{nextStepHint}</span>
+          </div>
         </div>
-        <button
-          type="button"
-          className="btn-create-portfolio-cta"
-          onClick={() => setIsCreateModalOpen(true)}
-          style={{
-            background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "10px",
-            padding: "0.65rem 1.25rem",
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
-          }}
-        >
-          <span>＋</span>
-          <span>Create Portfolio</span>
-        </button>
+
+        <div className="welcome-banner-actions">
+          {publishedPortfolio && (
+            <a
+              href={`/${publishedPortfolio.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-view-public-page"
+            >
+              👁️ View public page ↗
+            </a>
+          )}
+          <button
+            type="button"
+            className="btn-create-portfolio-cta"
+            onClick={() => setIsCreateModalOpen(true)}
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "10px",
+              padding: "0.65rem 1.25rem",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
+            }}
+          >
+            <span>＋</span>
+            <span>New portfolio</span>
+          </button>
+        </div>
       </div>
 
       {/* Backend Sync Error Banner */}
@@ -119,7 +138,6 @@ export const DashboardHomePage = ({ onNavigate }) => {
             color: "#fbbf24",
             padding: "12px 18px",
             borderRadius: "12px",
-            marginBottom: "1.25rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -153,17 +171,17 @@ export const DashboardHomePage = ({ onNavigate }) => {
       {/* Loading Skeleton */}
       {loading && !summary && (
         <div className="dashboard-skeleton-wrapper" aria-label="Loading dashboard...">
-          <div className="skeleton-pulse" style={{ height: "130px" }} />
-          <div className="skeleton-pulse" style={{ height: "220px" }} />
+          <div className="skeleton-pulse" style={{ height: "110px", borderRadius: "16px" }} />
           <div className="skeleton-stats-grid">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="skeleton-pulse" style={{ height: "110px" }} />
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton-pulse" style={{ height: "120px", borderRadius: "16px" }} />
             ))}
           </div>
+          <div className="skeleton-pulse" style={{ height: "240px", borderRadius: "16px" }} />
         </div>
       )}
 
-      {/* Error State Card with Try Again Retry Button */}
+      {/* Error State Card with Retry Button */}
       {error && !loading && (
         <div className="dashboard-error-card">
           <div className="dashboard-error-info">
@@ -179,65 +197,57 @@ export const DashboardHomePage = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* YOUR PORTFOLIOS SECTION */}
-      <RecentPortfoliosSection
-        portfolios={summary?.recentPortfolios}
-        onCreateClick={() => setIsCreateModalOpen(true)}
+      {/* 2. "YOUR JOURNEY" STEPPER */}
+      <ProductJourneySection
+        journey={summary?.journey}
+        onCreatePortfolio={() => setIsCreateModalOpen(true)}
       />
 
-      {/* PORTFOLIO OPTIMIZATION COACH PANEL */}
-      <AISuggestionsPanel
-        profileStrength={summary?.profileStrength}
-        resume={summary?.latestResume}
-        onApplyAction={(target) => {
-          if (target === "builder") {
-            if (summary?.primaryPortfolio?.id) navigate(getBuilderPath(summary.primaryPortfolio.id));
-            else setIsCreateModalOpen(true);
-          } else if (target === "themes") {
-            if (summary?.primaryPortfolio?.id) navigate(getThemesPath(summary.primaryPortfolio.id));
-            else setIsCreateModalOpen(true);
-          } else if (target === "publish") {
-            if (summary?.primaryPortfolio?.id) navigate(getPublishPath(summary.primaryPortfolio.id));
-            else setIsCreateModalOpen(true);
-          } else {
-            navigate(ROUTES.DASHBOARD_PROFILE);
-          }
-        }}
-      />
-
-      {/* DEDICATED PORTFOLIO READINESS STATUS WIDGET */}
-      <PortfolioStatusWidget
-        readiness={summary?.readiness}
-        portfolio={summary?.primaryPortfolio}
-        onPublish={() => {
-          if (summary?.primaryPortfolio?.id) {
-            navigate(getPublishPath(summary.primaryPortfolio.id));
-          } else {
-            setIsCreateModalOpen(true);
-          }
-        }}
-      />
-
-      {/* DEDICATED STATISTICS CARDS SECTION */}
+      {/* 3. KPI CARDS (4) */}
       <StatsCardsSection
         counts={summary?.counts}
         analytics={summary?.analytics}
+        profileStrength={summary?.profileStrength}
       />
 
-      {/* DEDICATED 8 QUICK ACTIONS CARDS SECTION */}
+      {/* 4. TWO-COLUMN SECTION */}
+      <div className="dash-two-col-grid">
+        {/* Left Column: Recent Portfolios (up to 5 or dashed new-user card) */}
+        <div className="dash-col-left">
+          <RecentPortfoliosSection
+            portfolios={summary?.recentPortfolios}
+            onCreateClick={() => setIsCreateModalOpen(true)}
+          />
+        </div>
+
+        {/* Right Column: Portfolio Readiness (6 checks + details) & Recent Activity */}
+        <div className="dash-col-right" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <PortfolioStatusWidget
+            readiness={summary?.readiness}
+            portfolio={summary?.primaryPortfolio}
+            onPublish={() => {
+              if (summary?.primaryPortfolio?.id) {
+                navigate(getPublishPath(summary.primaryPortfolio.id));
+              } else {
+                setIsCreateModalOpen(true);
+              }
+            }}
+          />
+          <RecentActivitySection />
+        </div>
+      </div>
+
+      {/* 5. QUICK ACTIONS (4) */}
       <QuickActionsSection
         onActionClick={handleQuickAction}
       />
 
-      {/* DEDICATED RECENT ACTIVITY TIMELINE SECTION */}
-      <RecentActivitySection />
-
-      {/* Create Portfolio Modal */}
+      {/* 6. CREATE PORTFOLIO MODAL */}
       <CreatePortfolioModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
-    </>
+    </div>
   );
 };
 

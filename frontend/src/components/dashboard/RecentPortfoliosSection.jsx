@@ -1,8 +1,7 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import StatusBadge from "../common/StatusBadge";
-import EmptyState from "../common/EmptyState";
-import { getBuilderPath, getThemesPath, getPublishPath } from "../../constants/routes";
+import { getBuilderPath, ROUTES } from "../../constants/routes";
 import "./RecentPortfoliosSection.css";
 
 export const RecentPortfoliosSection = ({
@@ -10,15 +9,21 @@ export const RecentPortfoliosSection = ({
   onCreateClick,
 }) => {
   const navigate = useNavigate();
+  const displayPortfolios = portfolios.slice(0, 5);
 
   return (
-    <section className="recent-portfolios-section-root">
+    <section className="recent-portfolios-section-root" aria-label="Recent Portfolios">
       <div className="recent-portfolios-header">
         <div className="recent-portfolios-title-group">
-          <h2>Your Portfolios</h2>
-          <p>Quick access to your active candidate profiles, drafts, and live links.</p>
+          <h2>Recent Portfolios</h2>
+          <p>Your active candidate profiles, drafts, and live links.</p>
         </div>
-        {portfolios.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {portfolios.length > 5 && (
+            <Link to={ROUTES.DASHBOARD_PORTFOLIO} className="btn-view-all-link">
+              View all ({portfolios.length}) →
+            </Link>
+          )}
           <button
             type="button"
             className="btn-create-portfolio-small"
@@ -27,33 +32,38 @@ export const RecentPortfoliosSection = ({
             <span>＋</span>
             <span>New Portfolio</span>
           </button>
-        )}
+        </div>
       </div>
 
-      {portfolios.length === 0 ? (
-        <EmptyState
-          icon="📂"
-          title="No Portfolios Created Yet"
-          description="Build your first personalized candidate portfolio in seconds with pre-built developer sections."
-          actionButton={
+      {displayPortfolios.length === 0 ? (
+        <div className="portfolio-empty-dashed-card">
+          <div className="empty-dashed-icon">📁</div>
+          <h3>You don't have a portfolio yet</h3>
+          <p>Create your first portfolio to showcase your engineering projects, skills, and resume.</p>
+          <div className="empty-dashed-actions">
             <button
               type="button"
               className="btn-primary-action"
               onClick={onCreateClick}
             >
-              ＋ Create First Portfolio
+              ＋ Create your first portfolio
             </button>
-          }
-        />
+            <Link to={ROUTES.DASHBOARD_TEMPLATES} className="btn-secondary-link">
+              Browse templates →
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="portfolios-grid-cards">
-          {portfolios.map((portfolio) => {
+          {displayPortfolios.map((portfolio) => {
             const isPublished = portfolio.status === "PUBLISHED";
-            const updatedDate = new Date(portfolio.updatedAt).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
+            const updatedDate = portfolio.updatedAt
+              ? new Date(portfolio.updatedAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "Recently";
 
             return (
               <div key={portfolio.id} className="portfolio-card-item">
@@ -67,7 +77,7 @@ export const RecentPortfoliosSection = ({
 
                 <div className="portfolio-meta-row">
                   <span className="portfolio-meta-item">
-                    💻 {portfolio.projectsCount || 0} {portfolio.projectsCount === 1 ? "project" : "projects"}
+                    💻 {portfolio.projectsCount || portfolio._count?.projects || 0} {(portfolio.projectsCount || portfolio._count?.projects) === 1 ? "project" : "projects"}
                   </span>
                   <span className="portfolio-meta-separator">•</span>
                   <span className="portfolio-meta-item">
@@ -87,29 +97,23 @@ export const RecentPortfoliosSection = ({
                   >
                     ✏️ Edit
                   </button>
-                  <button
-                    type="button"
-                    className="btn-portfolio-action secondary"
-                    onClick={() => navigate(getThemesPath(portfolio.id))}
-                  >
-                    🎨 Theme
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-portfolio-action secondary"
-                    onClick={() => navigate(getPublishPath(portfolio.id))}
-                  >
-                    ⚙️ Settings
-                  </button>
-                  {isPublished && (
+                  {isPublished ? (
                     <a
                       href={`/${portfolio.slug}`}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="btn-portfolio-action live"
                     >
-                      ↗ Live
+                      ↗ Preview
                     </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-portfolio-action secondary"
+                      onClick={() => navigate(getBuilderPath(portfolio.id))}
+                    >
+                      👁️ Preview
+                    </button>
                   )}
                 </div>
               </div>

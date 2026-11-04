@@ -72,6 +72,29 @@
   box-shadow: 0 20px 45px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+.large-action-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.large-action-card.disabled:hover {
+  transform: none;
+  border-color: rgba(129, 140, 248, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.action-card-soon-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(138, 150, 255, 0.15);
+  border: 1px solid rgba(138, 150, 255, 0.3);
+  color: var(--color-accent, #8A96FF);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* Color Accent Variations on Hover */
 .large-action-card.indigo:hover {
   background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.22), rgba(17, 24, 39, 0.85) 70%);
