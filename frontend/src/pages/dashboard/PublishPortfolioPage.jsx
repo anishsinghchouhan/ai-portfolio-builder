@@ -58,15 +58,15 @@ export const PublishPortfolioPage = () => {
         if (isMounted) {
           setPortfolio(fetched);
           const p = fetched.content?.personal || {};
+          const about = fetched.content?.about || {};
+          const candidateName = about.name || p.name || fetched.title || "Candidate";
+          const candidateDesc = about.bio || about.description || p.bio || p.headline || "Explore projects, work history, and skills.";
           setMetaTitle(
             fetched.content?.seo?.title ||
-              `${fetched.title || p.name || "Candidate"} — Professional Portfolio`
+              `${candidateName} — Professional Portfolio`
           );
           setMetaDescription(
-            fetched.content?.seo?.description ||
-              p.bio ||
-              p.headline ||
-              "Explore projects, work history, and skills."
+            fetched.content?.seo?.description || candidateDesc
           );
         }
       } catch (err) {

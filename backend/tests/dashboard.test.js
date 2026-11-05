@@ -452,4 +452,152 @@ describe("Dashboard Service & Correctness Suite (Isolated from Production DB)", 
       assert.equal(errorPassedToNext.errorCode, "NOT_FOUND");
     });
   });
+
+  describe("8. Portfolio themeConfig Zod Validation (Part 1)", () => {
+    it("accepts valid themeConfig matching allowed schema", async () => {
+      const { themeConfigSchema } = await import("../src/controllers/portfolioController.js");
+
+      const validConfig = {
+        preset: "stripe-indigo",
+        primary: "#4f46e5",
+        bg: "#0f172a",
+        text: "#f8fafc",
+        font: "Plus Jakarta Sans",
+        radius: 16,
+        layout: "default",
+      };
+
+      const result = themeConfigSchema.safeParse(validConfig);
+      assert.ok(result.success, "Valid themeConfig should pass validation");
+      assert.deepEqual(result.data, validConfig);
+    });
+
+    it("rejects themeConfig with extra or unknown keys (strict mode)", async () => {
+      const { themeConfigSchema } = await import("../src/controllers/portfolioController.js");
+
+      const invalidConfig = {
+        preset: "dark",
+        primary: "#6366f1",
+        bg: "#0b0f17",
+        text: "#f8fafc",
+        font: "Inter",
+        radius: 12,
+        layout: "default",
+        extraUnknownField: "not allowed",
+      };
+
+      const result = themeConfigSchema.safeParse(invalidConfig);
+      assert.strictEqual(result.success, false, "Unknown fields should be rejected");
+    });
+
+    it("rejects invalid non-hex color strings", async () => {
+      const { themeConfigSchema } = await import("../src/controllers/portfolioController.js");
+
+      const invalidColors = {
+        preset: "dark",
+        primary: "blue", // not hex
+        bg: "#0b0f17",
+        text: "#f8fafc",
+        font: "Inter",
+        radius: 12,
+        layout: "default",
+      };
+
+      const result = themeConfigSchema.safeParse(invalidColors);
+      assert.strictEqual(result.success, false, "Non-hex colors should be rejected");
+    });
+
+    it("rejects fonts that are not in the allowed list", async () => {
+      const { themeConfigSchema } = await import("../src/controllers/portfolioController.js");
+
+      const invalidFont = {
+        preset: "dark",
+        primary: "#6366f1",
+        bg: "#0b0f17",
+        text: "#f8fafc",
+        font: "Comic Sans MS", // not allowed
+        radius: 12,
+        layout: "default",
+      };
+
+      const result = themeConfigSchema.safeParse(invalidFont);
+      assert.strictEqual(result.success, false, "Disallowed fonts should be rejected");
+    });
+  });
+
+  describe("9. POST /api/v1/portfolios/:id/theme/generate (AI Theme Generation Controller)", () => {
+    it("returns 404 if portfolio is not found or not owned by user", async () => {
+      const { generatePortfolioTheme } = await import("../src/controllers/portfolioController.js");
+      const { default: prisma } = await import("../src/config/prisma.js");
+
+      const origFindFirst = prisma.portfolio.findFirst;
+      prisma.portfolio.findFirst = async () => null;
+
+      try {
+        const req = {
+          params: { id: "p-other-user" },
+          user: { id: "user-alpha" },
+          body: { stylePrompt: "dark mode with emerald green" },
+        };
+        let capturedErr = null;
+        await generatePortfolioTheme(req, {}, (err) => {
+          capturedErr = err;
+        });
+
+        assert.ok(capturedErr);
+        assert.strictEqual(capturedErr.statusCode, 404);
+        assert.strictEqual(capturedErr.message, "Portfolio not found.");
+      } finally {
+        prisma.portfolio.findFirst = origFindFirst;
+      }
+    });
+
+    it("returns 400 if stylePrompt is missing or exceeds 200 characters", async () => {
+      const { generatePortfolioTheme } = await import("../src/controllers/portfolioController.js");
+      const { default: prisma } = await import("../src/config/prisma.js");
+
+      const origFindFirst = prisma.portfolio.findFirst;
+      prisma.portfolio.findFirst = async () => ({
+        id: "p-1",
+        userId: "user-alpha",
+        content: {},
+      });
+
+      try {
+        // Missing stylePrompt
+        let capturedErr = null;
+        await generatePortfolioTheme(
+          {
+            params: { id: "p-1" },
+            user: { id: "user-alpha" },
+            body: { stylePrompt: "" },
+          },
+          {},
+          (err) => {
+            capturedErr = err;
+          }
+        );
+        assert.ok(capturedErr);
+        assert.strictEqual(capturedErr.statusCode, 400);
+
+        // Exceeds 200 characters
+        capturedErr = null;
+        await generatePortfolioTheme(
+          {
+            params: { id: "p-1" },
+            user: { id: "user-alpha" },
+            body: { stylePrompt: "a".repeat(201) },
+          },
+          {},
+          (err) => {
+            capturedErr = err;
+          }
+        );
+        assert.ok(capturedErr);
+        assert.strictEqual(capturedErr.statusCode, 400);
+      } finally {
+        prisma.portfolio.findFirst = origFindFirst;
+      }
+    });
+  });
 });

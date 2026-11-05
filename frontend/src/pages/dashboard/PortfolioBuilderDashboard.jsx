@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPortfolioById, updatePortfolio, publishPortfolio } from "../../services/portfolioService";
 import { useDashboardTheme } from "../../context/DashboardThemeContext";
+import { useAuth } from "../../hooks/useAuth";
 import { ROUTES, getThemesPath, getPublishPath } from "../../constants/routes";
+import CandidatePortfolioView from "../../components/portfolio/CandidatePortfolioView";
 import "./PortfolioBuilderDashboard.css";
 
 export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSaveDraft, onBack }) => {
@@ -10,6 +12,7 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
   const { portfolioId: paramId } = useParams();
   const portfolioId = propId || paramId;
   const { theme } = useDashboardTheme();
+  const { appUser } = useAuth();
   const [deviceMode, setDeviceMode] = useState("desktop"); // "desktop" | "tablet" | "mobile"
   const [saveStatus, setSaveStatus] = useState("Saved"); // "Unsaved" | "Saving..." | "Saved" | "Save failed"
   const [isSaving, setIsSaving] = useState(false);
@@ -28,7 +31,7 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
     { id: "skills", name: "Technical Skills", icon: "⚡", isVisible: true },
     { id: "projects", name: "Featured Projects", icon: "💻", isVisible: true },
     { id: "experience", name: "Work Experience", icon: "💼", isVisible: true },
-    { id: "testimonials", name: "Testimonials", icon: "⭐", isVisible: true },
+    { id: "testimonials", name: "Testimonials", icon: "⭐", isVisible: false },
     { id: "contact", name: "Contact & Socials", icon: "✉️", isVisible: true },
   ]);
 
@@ -195,10 +198,6 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
       </div>
     );
   }
-
-  const personalInfo = portfolio.content?.personal || {};
-  const candidateName = personalInfo.name || portfolio.user?.fullName || "Your Name";
-  const candidateHeadline = personalInfo.headline || portfolio.user?.headline || "Your Professional Title";
 
   return (
     <div className={`builder-root ${theme}`}>
@@ -386,59 +385,12 @@ export const PortfolioBuilderDashboard = ({ portfolioId: propId, onPublish, onSa
         {/* Live Canvas Preview Panel */}
         <main className="builder-preview-viewport">
           <div className={`preview-device-frame ${deviceMode}`}>
-            {/* Live Portfolio Preview Content */}
-            {sections.find((s) => s.id === "hero")?.isVisible && (
-              <div className="canvas-hero-block">
-                <h1>{candidateName}</h1>
-                <p>{candidateHeadline}</p>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button style={{ padding: "0.5rem 1.25rem", borderRadius: "999px", background: "#ffffff", color: "#0f172a", border: "none", fontWeight: 700 }}>
-                    View Work
-                  </button>
-                  <button style={{ padding: "0.5rem 1.25rem", borderRadius: "999px", background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", fontWeight: 600 }}>
-                    Contact Me
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {sections.find((s) => s.id === "about")?.isVisible && (
-              <div className="canvas-section-block">
-                <h3>About & Candidate Bio</h3>
-                <p style={{ color: "#475569", lineHeight: 1.6 }}>
-                  {personalInfo.bio || "Passionate software craftsman building scalable web applications and AI-driven user interfaces."}
-                </p>
-              </div>
-            )}
-
-            {sections.find((s) => s.id === "skills")?.isVisible && (
-              <div className="canvas-section-block">
-                <h3>Technical Skills Stack</h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {(portfolio.content?.skills || ["React", "TypeScript", "Node.js", "PostgreSQL", "Prisma", "Express", "Docker"]).map((skill) => (
-                    <span key={skill} style={{ padding: "0.3rem 0.75rem", borderRadius: "999px", background: "#f1f5f9", fontSize: "0.8rem", fontWeight: 600, color: "#334155" }}>
-                      {typeof skill === "string" ? skill : skill.name || skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {sections.find((s) => s.id === "projects")?.isVisible && (
-              <div className="canvas-section-block">
-                <h3>Featured Open Source Projects</h3>
-                <div style={{ display: "grid", gridTemplateColumns: deviceMode === "mobile" ? "1fr" : "1fr 1fr", gap: "1rem" }}>
-                  <div style={{ border: "1px solid #cbd5e1", borderRadius: "16px", padding: "1.25rem", textAlign: "left" }}>
-                    <h4 style={{ margin: "0 0 6px 0", color: "#0f172a" }}>AI Portfolio Builder SaaS</h4>
-                    <p style={{ fontSize: "0.82rem", color: "#64748b", margin: 0 }}>Automated resume parser & live builder platform with Vercel edge deployment.</p>
-                  </div>
-                  <div style={{ border: "1px solid #cbd5e1", borderRadius: "16px", padding: "1.25rem", textAlign: "left" }}>
-                    <h4 style={{ margin: "0 0 6px 0", color: "#0f172a" }}>Real-Time WebSocket Engine</h4>
-                    <p style={{ fontSize: "0.82rem", color: "#64748b", margin: 0 }}>High-throughput pub/sub telemetry service handling 250k daily events.</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            <CandidatePortfolioView
+              portfolio={portfolio}
+              user={appUser || portfolio?.user}
+              sections={sections}
+              isPublic={false}
+            />
           </div>
         </main>
       </div>

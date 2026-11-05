@@ -39,24 +39,13 @@ export const updatePortfolio = async (id, contentUpdates) => {
 
 /**
  * Update portfolio theme configuration (nested inside content.themeConfig)
+ * @param {string} portfolioId - Portfolio ID
+ * @param {Object} themeConfig - { preset, primary, bg, text, font, radius, layout }
  */
-export const updatePortfolioTheme = async (id, themeConfig) => {
-  // Fetch existing content to perform immutable merge
-  const existing = await getPortfolioById(id);
-  const currentPortfolio = existing.data || existing;
-  const currentContent = currentPortfolio.content || {};
-
-  const updatedContent = {
-    ...currentContent,
-    themeConfig: {
-      ...(currentContent.themeConfig || {}),
-      ...themeConfig,
-    },
-  };
-
-  const response = await api.patch(`/portfolios/${id}`, {
-    theme: themeConfig.template || currentPortfolio.theme || "dark-glass",
-    content: updatedContent,
+export const updatePortfolioTheme = async (portfolioId, themeConfig) => {
+  const response = await api.patch(`/portfolios/${portfolioId}`, {
+    theme: themeConfig.preset,
+    themeConfig,
   });
   triggerDashboardRefresh();
   return response.data;

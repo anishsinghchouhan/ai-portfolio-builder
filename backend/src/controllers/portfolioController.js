@@ -1,8 +1,53 @@
+import { z } from "zod";
 import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
 import { supabaseAdmin } from "../middleware/authMiddleware.js";
 import { invalidateDashboardSummaryCache, generateVisitorHash } from "../services/dashboardService.js";
+import { generateThemeFromPrompt } from "../services/geminiService.js";
+
+// Allowed typography fonts for custom and preset themes
+export const ALLOWED_THEME_FONTS = [
+  "Plus Jakarta Sans",
+  "Inter",
+  "Outfit",
+  "Space Grotesk",
+  "Roboto",
+  "Poppins",
+  "Geist",
+  "Fira Code",
+  "system-ui",
+  "sans-serif",
+];
+
+// Allowed layouts for theme configuration
+export const ALLOWED_THEME_LAYOUTS = [
+  "default",
+  "developer",
+  "minimal",
+  "glass",
+  "corporate",
+  "creative",
+  "dark",
+];
+
+const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+// Zod schema for theme configuration: allowed keys only, hex colors only, font from allowed list
+export const themeConfigSchema = z
+  .object({
+    preset: z.string().min(1).max(50),
+    primary: z.string().regex(HEX_COLOR_REGEX, "primary must be a valid hex color (e.g. #4f46e5)"),
+    bg: z.string().regex(HEX_COLOR_REGEX, "bg must be a valid hex color (e.g. #0b0f17)"),
+    surface: z.string().regex(HEX_COLOR_REGEX, "surface must be a valid hex color").optional(),
+    accent: z.string().regex(HEX_COLOR_REGEX, "accent must be a valid hex color").optional(),
+    text: z.string().regex(HEX_COLOR_REGEX, "text must be a valid hex color (e.g. #f8fafc)"),
+    muted: z.string().regex(HEX_COLOR_REGEX, "muted must be a valid hex color").optional(),
+    font: z.enum(ALLOWED_THEME_FONTS),
+    radius: z.number().min(0).max(999),
+    layout: z.enum(ALLOWED_THEME_LAYOUTS).default("default"),
+  })
+  .strict();
 
 export const RESERVED_SLUGS = [
   "login",
@@ -219,22 +264,51 @@ export const updatePortfolio = catchAsync(async (req, res, next) => {
     return next(new AppError("You do not have permission to update this portfolio.", 403, "FORBIDDEN"));
   }
 
-  const { title, theme, content, status } = req.body;
+  const { title, theme, content, status, themeConfig: directThemeConfig } = req.body;
 
   // Strict status validation: must be one of DRAFT, PUBLISHED, ARCHIVED if provided
   if (status !== undefined && !["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)) {
     return next(new AppError("Invalid status value. Must be DRAFT, PUBLISHED, or ARCHIVED.", 400, "BAD_REQUEST"));
   }
 
+  // Zod validation for themeConfig if provided directly or inside content
+  const rawThemeConfig = directThemeConfig !== undefined ? directThemeConfig : content?.themeConfig;
+  let validatedThemeConfig = null;
+
+  if (rawThemeConfig !== undefined && rawThemeConfig !== null) {
+    const parseResult = themeConfigSchema.safeParse(rawThemeConfig);
+    if (!parseResult.success) {
+      const issueDetails = parseResult.error.errors
+        .map((e) => `${e.path.join(".") || "themeConfig"}: ${e.message}`)
+        .join("; ");
+      return next(new AppError(`Invalid theme configuration: ${issueDetails}`, 400, "BAD_REQUEST"));
+    }
+    validatedThemeConfig = parseResult.data;
+  }
+
   try {
+    const existingContent =
+      portfolio.content && typeof portfolio.content === "object" ? portfolio.content : {};
+
+    const updateData = {
+      ...(title && { title: title.trim() }),
+      ...(theme && { theme }),
+      ...(status && { status }),
+    };
+
+    if (validatedThemeConfig) {
+      updateData.theme = validatedThemeConfig.preset || updateData.theme || portfolio.theme;
+      updateData.content = {
+        ...(content && typeof content === "object" ? content : existingContent),
+        themeConfig: validatedThemeConfig,
+      };
+    } else if (content !== undefined) {
+      updateData.content = content;
+    }
+
     const updatedPortfolio = await prisma.portfolio.update({
       where: { id },
-      data: {
-        ...(title && { title: title.trim() }),
-        ...(theme && { theme }),
-        ...(content && { content }),
-        ...(status && { status }),
-      },
+      data: updateData,
     });
 
     invalidateDashboardSummaryCache(dbUser.id);
@@ -404,6 +478,70 @@ export const getPublicPortfolioBySlug = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * POST /api/v1/portfolios/:id/theme/generate
+ * Generate a cohesive themeConfig using Gemini AI based on user style prompt.
+ */
+export const generatePortfolioTheme = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const dbUser = getDbUser(req);
+
+  // 1. Strict ownership check: own portfolio only (404 if not found or not yours)
+  const portfolio = await prisma.portfolio.findFirst({
+    where: {
+      id,
+      userId: dbUser.id,
+    },
+  });
+
+  if (!portfolio) {
+    return next(new AppError("Portfolio not found.", 404, "NOT_FOUND"));
+  }
+
+  // 2. Validate input body: { stylePrompt: string max 200 chars }
+  const { stylePrompt } = req.body || {};
+  if (!stylePrompt || typeof stylePrompt !== "string" || !stylePrompt.trim()) {
+    return next(new AppError("stylePrompt is required.", 400, "BAD_REQUEST"));
+  }
+
+  if (stylePrompt.trim().length > 200) {
+    return next(new AppError("stylePrompt cannot exceed 200 characters.", 400, "BAD_REQUEST"));
+  }
+
+  // 3. Call Gemini service with fallback models and retry on invalid JSON
+  const validatedThemeConfig = await generateThemeFromPrompt(stylePrompt.trim());
+
+  // 4. Save to portfolio.content.themeConfig (never raw AI text, HTML, or CSS)
+  const existingContent =
+    typeof portfolio.content === "object" && portfolio.content !== null
+      ? portfolio.content
+      : {};
+
+  const updatedContent = {
+    ...existingContent,
+    themeConfig: validatedThemeConfig,
+  };
+
+  const updatedPortfolio = await prisma.portfolio.update({
+    where: { id: portfolio.id },
+    data: {
+      theme: validatedThemeConfig.preset,
+      content: updatedContent,
+    },
+  });
+
+  invalidateDashboardSummaryCache(dbUser.id);
+
+  res.status(200).json({
+    success: true,
+    message: "Theme generated successfully",
+    data: {
+      themeConfig: validatedThemeConfig,
+      portfolio: updatedPortfolio,
+    },
+  });
+});
+
 export default {
   getPortfolios,
   getPortfolioById,
@@ -411,5 +549,6 @@ export default {
   updatePortfolio,
   deletePortfolio,
   publishPortfolio,
+  generatePortfolioTheme,
   getPublicPortfolioBySlug,
 };
