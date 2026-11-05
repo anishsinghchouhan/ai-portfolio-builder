@@ -53,9 +53,30 @@ export const dashboardLimiter = createLimiter({
   errorCode: "DASHBOARD_RATE_LIMIT_EXCEEDED",
 });
 
+// 5. Resume Upload Protection: 10 uploads per hour per user
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => req.user?.id || req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      statusCode: 429,
+      error: {
+        code: "UPLOAD_RATE_LIMIT_EXCEEDED",
+        message: "Upload rate limit exceeded (max 10 uploads per hour). Please try again later.",
+      },
+      timestamp: new Date().toISOString(),
+    });
+  },
+});
+
 export default {
   globalLimiter,
   authLimiter,
   aiLimiter,
   dashboardLimiter,
+  uploadLimiter,
 };

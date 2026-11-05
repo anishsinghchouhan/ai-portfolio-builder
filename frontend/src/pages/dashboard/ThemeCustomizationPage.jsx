@@ -9,14 +9,17 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
   const { portfolioId: paramId } = useParams();
   const portfolioId = propId || paramId;
   const [themeMode, setThemeMode] = useState("dark"); // "dark" | "light"
-  const [activePreset, setActivePreset] = useState("stripe-indigo");
+  const [activePreset, setActivePreset] = useState("dark");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Customization Token States
-  const [primaryColor, setPrimaryColor] = useState("#4f46e5");
+  // Customization Token States matching { preset, primary, bg, text, font, radius, layout }
+  const [primaryColor, setPrimaryColor] = useState("#6366f1");
   const [secondaryColor, setSecondaryColor] = useState("#0ea5e9");
-  const [fontFamily, setFontFamily] = useState("Plus Jakarta Sans");
-  const [borderRadius, setBorderRadius] = useState(16);
+  const [bgColor, setBgColor] = useState("#0b0f17");
+  const [textColor, setTextColor] = useState("#f8fafc");
+  const [fontFamily, setFontFamily] = useState("Inter");
+  const [borderRadius, setBorderRadius] = useState(12);
+  const [layoutStyle, setLayoutStyle] = useState("default");
   const [shadowStyle, setShadowStyle] = useState("neon"); // "soft" | "medium" | "neon" | "flat"
   const [buttonShape, setButtonShape] = useState("pill"); // "pill" | "rounded" | "sharp" | "glass"
 
@@ -27,11 +30,66 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
   const [feedback, setFeedback] = useState(null);
 
   const presets = [
-    { id: "stripe-indigo", name: "Stripe Indigo", primary: "#4f46e5", secondary: "#0ea5e9" },
-    { id: "vercel-clean", name: "Vercel Clean", primary: "#000000", secondary: "#333333" },
-    { id: "linear-dark", name: "Linear Dark", primary: "#5e6ad2", secondary: "#4da7ff" },
-    { id: "emerald-obsidian", name: "Emerald Obsidian", primary: "#10b981", secondary: "#059669" },
-    { id: "rose-cyber", name: "Rose Cyberpunk", primary: "#f43f5e", secondary: "#fb7185" },
+    {
+      id: "dark",
+      name: "Modern Dark",
+      primary: "#6366f1",
+      bg: "#0b0f17",
+      text: "#f8fafc",
+      font: "Inter",
+      radius: 12,
+      layout: "default",
+    },
+    {
+      id: "stripe-indigo",
+      name: "Stripe Indigo",
+      primary: "#4f46e5",
+      bg: "#0f172a",
+      text: "#f8fafc",
+      font: "Plus Jakarta Sans",
+      radius: 16,
+      layout: "default",
+    },
+    {
+      id: "vercel-clean",
+      name: "Vercel Clean",
+      primary: "#000000",
+      bg: "#ffffff",
+      text: "#0f172a",
+      font: "Inter",
+      radius: 8,
+      layout: "default",
+    },
+    {
+      id: "linear-dark",
+      name: "Linear Dark",
+      primary: "#5e6ad2",
+      bg: "#08090a",
+      text: "#f7f8f8",
+      font: "Inter",
+      radius: 12,
+      layout: "default",
+    },
+    {
+      id: "emerald-obsidian",
+      name: "Emerald Obsidian",
+      primary: "#10b981",
+      bg: "#061a14",
+      text: "#ecfdf5",
+      font: "Plus Jakarta Sans",
+      radius: 16,
+      layout: "default",
+    },
+    {
+      id: "rose-cyber",
+      name: "Rose Cyberpunk",
+      primary: "#f43f5e",
+      bg: "#18050e",
+      text: "#fff1f2",
+      font: "Space Grotesk",
+      radius: 16,
+      layout: "default",
+    },
   ];
 
   useEffect(() => {
@@ -54,14 +112,19 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
           setPortfolio(fetchedPortfolio);
           const tc = fetchedPortfolio.content?.themeConfig || {};
 
-          if (fetchedPortfolio.theme) {
-            setActivePreset(fetchedPortfolio.theme);
+          if (tc.preset || fetchedPortfolio.theme) {
+            setActivePreset(tc.preset || fetchedPortfolio.theme);
           }
-          if (tc.themeMode) setThemeMode(tc.themeMode);
-          if (tc.primaryColor) setPrimaryColor(tc.primaryColor);
+          if (tc.primary || tc.primaryColor) setPrimaryColor(tc.primary || tc.primaryColor);
           if (tc.secondaryColor) setSecondaryColor(tc.secondaryColor);
-          if (tc.fontFamily) setFontFamily(tc.fontFamily);
-          if (tc.borderRadius !== undefined) setBorderRadius(tc.borderRadius);
+          if (tc.bg) setBgColor(tc.bg);
+          if (tc.text) setTextColor(tc.text);
+          if (tc.font || tc.fontFamily) setFontFamily(tc.font || tc.fontFamily);
+          if (tc.radius !== undefined || tc.borderRadius !== undefined) {
+            setBorderRadius(tc.radius !== undefined ? tc.radius : tc.borderRadius);
+          }
+          if (tc.layout) setLayoutStyle(tc.layout);
+          if (tc.themeMode) setThemeMode(tc.themeMode);
           if (tc.shadowStyle) setShadowStyle(tc.shadowStyle);
           if (tc.buttonShape) setButtonShape(tc.buttonShape);
         }
@@ -92,15 +155,22 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
   const handleApplyPreset = (preset) => {
     setActivePreset(preset.id);
     setPrimaryColor(preset.primary);
-    setSecondaryColor(preset.secondary);
+    setBgColor(preset.bg);
+    setTextColor(preset.text);
+    setFontFamily(preset.font);
+    setBorderRadius(preset.radius);
+    setLayoutStyle(preset.layout || "default");
   };
 
   const handleResetTheme = () => {
-    setActivePreset("stripe-indigo");
-    setPrimaryColor("#4f46e5");
+    setActivePreset("dark");
+    setPrimaryColor("#6366f1");
     setSecondaryColor("#0ea5e9");
-    setFontFamily("Plus Jakarta Sans");
-    setBorderRadius(16);
+    setBgColor("#0b0f17");
+    setTextColor("#f8fafc");
+    setFontFamily("Inter");
+    setBorderRadius(12);
+    setLayoutStyle("default");
     setShadowStyle("neon");
     setButtonShape("pill");
     setThemeMode("dark");
@@ -112,17 +182,16 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
 
     try {
       const themeConfig = {
-        template: activePreset,
-        themeMode,
-        primaryColor,
-        secondaryColor,
-        fontFamily,
-        borderRadius,
-        shadowStyle,
-        buttonShape,
+        preset: activePreset,
+        primary: primaryColor,
+        bg: bgColor,
+        text: textColor,
+        font: fontFamily,
+        radius: Number(borderRadius),
+        layout: layoutStyle || "default",
       };
 
-      await updatePortfolioTheme(portfolioId, activePreset, themeConfig);
+      await updatePortfolioTheme(portfolioId, themeConfig);
 
       if (onApplyTheme) {
         onApplyTheme();
@@ -172,8 +241,39 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
     );
   }
 
-  const candidateName = portfolio.content?.personal?.name || portfolio.user?.fullName || "Your Name";
-  const candidateRole = portfolio.content?.personal?.headline || portfolio.user?.headline || "Your Professional Title";
+  const content = portfolio.content || {};
+  const about = content.about || {};
+  const personal = content.personal || {};
+  const hero = content.hero || {};
+
+  const candidateName =
+    about.name?.trim() ||
+    personal.name?.trim() ||
+    hero.name?.trim() ||
+    (typeof content.name === "string" ? content.name.trim() : "") ||
+    portfolio.user?.fullName ||
+    portfolio.title ||
+    "Candidate Portfolio";
+
+  const candidateRole =
+    about.title?.trim() ||
+    about.headline?.trim() ||
+    personal.headline?.trim() ||
+    personal.title?.trim() ||
+    hero.headline?.trim() ||
+    hero.title?.trim() ||
+    (typeof content.headline === "string" ? content.headline.trim() : "") ||
+    portfolio.user?.headline ||
+    "";
+
+  const candidateBio =
+    about.bio?.trim() ||
+    about.description?.trim() ||
+    personal.bio?.trim() ||
+    personal.description?.trim() ||
+    (typeof content.bio === "string" ? content.bio.trim() : "") ||
+    portfolio.user?.bio ||
+    "";
 
   return (
     <div className={`theme-page-root ${themeMode}`}>
@@ -355,8 +455,8 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
           style={{
             fontFamily: fontFamily,
             borderRadius: `${borderRadius}px`,
-            backgroundColor: themeMode === "dark" ? "#111827" : "#ffffff",
-            color: themeMode === "dark" ? "#ffffff" : "#0f172a",
+            backgroundColor: bgColor,
+            color: textColor,
             border: `1px solid ${primaryColor}40`,
             boxShadow:
               shadowStyle === "neon"
@@ -371,12 +471,14 @@ export const ThemeCustomizationPage = ({ portfolioId: propId, onApplyTheme, onBa
           <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: "0 0 8px 0" }}>
             {candidateName}
           </h1>
-          <p style={{ fontSize: "1rem", color: secondaryColor, fontWeight: 600, margin: "0 0 1.25rem 0" }}>
-            {candidateRole}
-          </p>
+          {candidateRole && (
+            <p style={{ fontSize: "1rem", color: secondaryColor, fontWeight: 600, margin: "0 0 1.25rem 0" }}>
+              {candidateRole}
+            </p>
+          )}
 
           <p style={{ fontSize: "0.88rem", lineHeight: 1.6, opacity: 0.85, margin: "0 0 2rem 0" }}>
-            {portfolio.content?.personal?.bio || "Building production-ready web applications, distributed APIs, and intelligent user interfaces using modern web technologies."}
+            {candidateBio || "Add your summary in Profile settings."}
           </p>
 
           {/* Render Button with Dynamic Shape & Color */}

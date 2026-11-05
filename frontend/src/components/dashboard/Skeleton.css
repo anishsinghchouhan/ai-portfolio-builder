@@ -19,3 +19,14 @@
   }
 }
 
+[data-dashboard-theme="light"] .skeleton-shimmer-box,
+.dashboard-root.light .skeleton-shimmer-box {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.05) 25%,
+    rgba(15, 23, 42, 0.10) 50%,
+    rgba(15, 23, 42, 0.05) 75%
+  );
+  background-size: 200% 100%;
+}
+

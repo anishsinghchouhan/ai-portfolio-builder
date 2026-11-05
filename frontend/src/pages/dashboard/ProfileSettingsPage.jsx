@@ -21,17 +21,31 @@ export const ProfileSettingsPage = () => {
     website: "",
     avatarUrl: "",
   });
+
+  const [initialProfile, setInitialProfile] = useState({
+    fullName: "",
+    headline: "",
+    bio: "",
+    location: "",
+    phone: "",
+    github: "",
+    linkedin: "",
+    website: "",
+    avatarUrl: "",
+  });
+
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Sync profile state from appUser or backend
+  // Populate profile fields strictly from API or cache (no hardcoded fallback names)
   const populateFields = useCallback((data) => {
     if (!data) return;
-    setProfile({
+    const clean = {
       fullName: data.fullName || "",
       headline: data.headline || "",
       bio: data.bio || "",
@@ -41,48 +55,42 @@ export const ProfileSettingsPage = () => {
       linkedin: data.linkedin || "",
       website: data.website || "",
       avatarUrl: data.avatarUrl || "",
-    });
+    };
+    setProfile(clean);
+    setInitialProfile(clean);
     setEmail(data.email || user?.email || "");
   }, [user?.email]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    // Fast-path from cached store
-    if (appUser) {
-      populateFields(appUser);
+  // Load fresh profile on mount from GET /api/v1/users/me
+  const loadProfile = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const res = await api.get("/users/me");
+      const freshUser = res.data?.data || res.data;
+      if (freshUser) {
+        populateFields(freshUser);
+        authStore.setState({ appUser: freshUser });
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        err.message ||
+        "Could not load profile. Please check your network.";
+      setLoadError(msg);
+    } finally {
       setIsLoading(false);
     }
+  }, [populateFields]);
 
-    // Always fetch fresh profile on mount
-    api
-      .get("/users/me")
-      .then((res) => {
-        if (!isMounted) return;
-        const freshUser = res.data?.data || res.data;
-        if (freshUser) {
-          populateFields(freshUser);
-          authStore.setState({ appUser: freshUser });
-        }
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        if (!appUser) {
-          setErrorMessage(
-            err.response?.data?.error?.message ||
-              err.message ||
-              "Could not load profile. Please check your network."
-          );
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [appUser, populateFields]);
+  useEffect(() => {
+    // If cached appUser exists, pre-fill to avoid initial blank flash
+    if (appUser) {
+      populateFields(appUser);
+    }
+    loadProfile();
+  }, [appUser, loadProfile, populateFields]);
 
   const handleChange = (field, val) => {
     setProfile((prev) => ({ ...prev, [field]: val }));
@@ -104,7 +112,7 @@ export const ProfileSettingsPage = () => {
   };
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setSuccessMessage(null);
     setErrorMessage(null);
 
@@ -125,21 +133,36 @@ export const ProfileSettingsPage = () => {
       return;
     }
 
+    // Determine strictly changed fields only
+    const payload = {};
+    const editableFields = [
+      "fullName",
+      "headline",
+      "bio",
+      "location",
+      "phone",
+      "github",
+      "linkedin",
+      "website",
+      "avatarUrl",
+    ];
+
+    for (const key of editableFields) {
+      const currentVal = profile[key]?.trim() || null;
+      const initialVal = initialProfile[key]?.trim() || null;
+      if (currentVal !== initialVal) {
+        payload[key] = currentVal;
+      }
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setSuccessMessage("No changes to save.");
+      setTimeout(() => setSuccessMessage(null), 3000);
+      return;
+    }
+
     setIsSaving(true);
     setFieldErrors({});
-
-    // Payload contains strictly allowed User fields only
-    const payload = {
-      fullName: profile.fullName?.trim() || null,
-      headline: profile.headline?.trim() || null,
-      bio: profile.bio?.trim() || null,
-      location: profile.location?.trim() || null,
-      phone: profile.phone?.trim() || null,
-      github: profile.github?.trim() || null,
-      linkedin: profile.linkedin?.trim() || null,
-      website: profile.website?.trim() || null,
-      avatarUrl: profile.avatarUrl?.trim() || null,
-    };
 
     try {
       const res = await api.patch("/users/me", payload);
@@ -183,13 +206,17 @@ export const ProfileSettingsPage = () => {
     }
   };
 
-  const userInitials = (profile.fullName || user?.email || "U")
-    .split(" ")
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
+  // Avatar initials from fullName; if empty, returns null so a neutral icon is shown
+  const userInitials = profile.fullName?.trim()
+    ? profile.fullName
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .map((p) => p[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : null;
 
   return (
     <div className={`profile-settings-root ${theme}`}>
@@ -203,7 +230,7 @@ export const ProfileSettingsPage = () => {
           type="button"
           className="btn-save-profile"
           onClick={handleSave}
-          disabled={isSaving || isLoading}
+          disabled={isSaving || isLoading || Boolean(loadError)}
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
@@ -223,210 +250,258 @@ export const ProfileSettingsPage = () => {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="profile-form-grid">
-        {/* Left: Avatar Card */}
-        <div className="profile-card-box profile-avatar-card">
-          <h3>Avatar</h3>
-          {profile.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt={profile.fullName || "User Avatar"}
-              className="profile-avatar-img"
-              onError={(e) => {
-                e.target.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="profile-avatar-fallback">
-              {userInitials}
+      {/* Loading Skeleton State */}
+      {isLoading && !profile.fullName && !appUser ? (
+        <div className="profile-skeleton-wrapper" aria-busy="true" aria-label="Loading profile...">
+          <div className="profile-card-box profile-skeleton-card left">
+            <div className="skeleton-avatar-circle" />
+            <div className="skeleton-line-bar" />
+            <div className="skeleton-input-box" />
+          </div>
+          <div className="profile-card-box profile-skeleton-card right">
+            <div className="skeleton-line-bar short" />
+            <div className="skeleton-row-grid">
+              <div className="skeleton-input-box" />
+              <div className="skeleton-input-box" />
             </div>
-          )}
-
-          <div className="form-group-profile" style={{ marginTop: "1rem" }}>
-            <label htmlFor="input-avatar-url">Avatar Image URL</label>
-            <input
-              id="input-avatar-url"
-              type="url"
-              className={`input-profile ${fieldErrors.avatarUrl ? "has-error" : ""}`}
-              placeholder="https://example.com/avatar.jpg"
-              value={profile.avatarUrl}
-              onChange={(e) => handleChange("avatarUrl", e.target.value)}
-              disabled={isSaving || isLoading}
-            />
-            {fieldErrors.avatarUrl && (
-              <span className="field-error-text">{fieldErrors.avatarUrl}</span>
-            )}
-            <span className="field-hint-text">Direct HTTPS image link</span>
+            <div className="skeleton-row-grid">
+              <div className="skeleton-input-box" />
+              <div className="skeleton-input-box" />
+            </div>
+            <div className="skeleton-textarea-box" />
           </div>
         </div>
-
-        {/* Right: Personal & Social Information Form */}
-        <div className="profile-card-box">
-          <h3 style={{ margin: "0 0 1.25rem 0" }}>👤 Personal Details</h3>
-
-          <div className="profile-form-row">
-            <div className="form-group-profile">
-              <label htmlFor="input-full-name">Full Name</label>
-              <input
-                id="input-full-name"
-                type="text"
-                className={`input-profile ${fieldErrors.fullName ? "has-error" : ""}`}
-                placeholder="e.g. Alex Morgan"
-                value={profile.fullName}
-                onChange={(e) => handleChange("fullName", e.target.value)}
-                maxLength={100}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.fullName && (
-                <span className="field-error-text">{fieldErrors.fullName}</span>
-              )}
-            </div>
-
-            <div className="form-group-profile">
-              <label htmlFor="input-email">
-                Email Address <span className="read-only-badge">Managed by Auth</span>
-              </label>
-              <input
-                id="input-email"
-                type="email"
-                className="input-profile read-only"
-                value={email}
-                readOnly
-                disabled
-              />
-            </div>
-          </div>
-
-          <div className="profile-form-row">
-            <div className="form-group-profile">
-              <label htmlFor="input-headline">Professional Headline</label>
-              <input
-                id="input-headline"
-                type="text"
-                className={`input-profile ${fieldErrors.headline ? "has-error" : ""}`}
-                placeholder="e.g. Senior Full-Stack Engineer"
-                value={profile.headline}
-                onChange={(e) => handleChange("headline", e.target.value)}
-                maxLength={150}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.headline && (
-                <span className="field-error-text">{fieldErrors.headline}</span>
-              )}
-            </div>
-
-            <div className="form-group-profile">
-              <label htmlFor="input-location">Location</label>
-              <input
-                id="input-location"
-                type="text"
-                className={`input-profile ${fieldErrors.location ? "has-error" : ""}`}
-                placeholder="e.g. San Francisco, CA • Remote"
-                value={profile.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-                maxLength={100}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.location && (
-                <span className="field-error-text">{fieldErrors.location}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="profile-form-row">
-            <div className="form-group-profile">
-              <label htmlFor="input-phone">Phone Number</label>
-              <input
-                id="input-phone"
-                type="tel"
-                className={`input-profile ${fieldErrors.phone ? "has-error" : ""}`}
-                placeholder="e.g. +1 (555) 012-3456"
-                value={profile.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                maxLength={30}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.phone && (
-                <span className="field-error-text">{fieldErrors.phone}</span>
-              )}
-            </div>
-
-            <div className="form-group-profile">
-              <label htmlFor="input-website">Personal Website</label>
-              <input
-                id="input-website"
-                type="url"
-                className={`input-profile ${fieldErrors.website ? "has-error" : ""}`}
-                placeholder="https://yourwebsite.com"
-                value={profile.website}
-                onChange={(e) => handleChange("website", e.target.value)}
-                maxLength={255}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.website && (
-                <span className="field-error-text">{fieldErrors.website}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="form-group-profile">
-            <label htmlFor="input-bio">Bio / Summary</label>
-            <textarea
-              id="input-bio"
-              className={`textarea-profile ${fieldErrors.bio ? "has-error" : ""}`}
-              placeholder="Tell recruiters about your background, strengths, and what drives you..."
-              rows={4}
-              value={profile.bio}
-              onChange={(e) => handleChange("bio", e.target.value)}
-              maxLength={1000}
-              disabled={isSaving || isLoading}
-            />
-            <div className="bio-char-count">
-              {profile.bio?.length || 0} / 1000
-            </div>
-            {fieldErrors.bio && (
-              <span className="field-error-text">{fieldErrors.bio}</span>
-            )}
-          </div>
-
-          <h3 style={{ margin: "2rem 0 1rem 0" }}>🔗 Social Links</h3>
-          <div className="profile-form-row">
-            <div className="form-group-profile">
-              <label htmlFor="input-github">GitHub Profile</label>
-              <input
-                id="input-github"
-                type="url"
-                className={`input-profile ${fieldErrors.github ? "has-error" : ""}`}
-                placeholder="https://github.com/username"
-                value={profile.github}
-                onChange={(e) => handleChange("github", e.target.value)}
-                maxLength={255}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.github && (
-                <span className="field-error-text">{fieldErrors.github}</span>
-              )}
-            </div>
-
-            <div className="form-group-profile">
-              <label htmlFor="input-linkedin">LinkedIn Profile</label>
-              <input
-                id="input-linkedin"
-                type="url"
-                className={`input-profile ${fieldErrors.linkedin ? "has-error" : ""}`}
-                placeholder="https://linkedin.com/in/username"
-                value={profile.linkedin}
-                onChange={(e) => handleChange("linkedin", e.target.value)}
-                maxLength={255}
-                disabled={isSaving || isLoading}
-              />
-              {fieldErrors.linkedin && (
-                <span className="field-error-text">{fieldErrors.linkedin}</span>
-              )}
-            </div>
-          </div>
+      ) : loadError && !profile.fullName ? (
+        <div className="profile-card-box profile-load-error-card" role="alert">
+          <div className="load-error-icon">⚠️</div>
+          <h3>Failed to Load Profile</h3>
+          <p>{loadError}</p>
+          <button type="button" className="btn-retry-load" onClick={loadProfile}>
+            Retry
+          </button>
         </div>
-      </form>
+      ) : (
+        <form onSubmit={handleSave} className="profile-form-grid">
+          {/* Left: Avatar Card */}
+          <div className="profile-card-box profile-avatar-card">
+            <h3>Avatar</h3>
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.fullName || "User Avatar"}
+                className="profile-avatar-img"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : userInitials ? (
+              <div className="profile-avatar-fallback">
+                {userInitials}
+              </div>
+            ) : (
+              <div className="profile-avatar-fallback neutral" aria-label="Neutral user avatar">
+                <svg
+                  width="44"
+                  height="44"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+            )}
+
+            <div className="form-group-profile" style={{ marginTop: "1rem" }}>
+              <label htmlFor="input-avatar-url">Avatar Image URL</label>
+              <input
+                id="input-avatar-url"
+                type="url"
+                className={`input-profile ${fieldErrors.avatarUrl ? "has-error" : ""}`}
+                placeholder="https://example.com/avatar.jpg"
+                value={profile.avatarUrl}
+                onChange={(e) => handleChange("avatarUrl", e.target.value)}
+                disabled={isSaving || isLoading}
+              />
+              {fieldErrors.avatarUrl && (
+                <span className="field-error-text">{fieldErrors.avatarUrl}</span>
+              )}
+              <span className="field-hint-text">Direct HTTPS image link</span>
+            </div>
+          </div>
+
+          {/* Right: Personal & Social Information Form */}
+          <div className="profile-card-box">
+            <h3 style={{ margin: "0 0 1.25rem 0" }}>👤 Personal Details</h3>
+
+            <div className="profile-form-row">
+              <div className="form-group-profile">
+                <label htmlFor="input-full-name">Full Name</label>
+                <input
+                  id="input-full-name"
+                  type="text"
+                  className={`input-profile ${fieldErrors.fullName ? "has-error" : ""}`}
+                  placeholder="e.g. Alex Morgan"
+                  value={profile.fullName}
+                  onChange={(e) => handleChange("fullName", e.target.value)}
+                  maxLength={100}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.fullName && (
+                  <span className="field-error-text">{fieldErrors.fullName}</span>
+                )}
+              </div>
+
+              <div className="form-group-profile">
+                <label htmlFor="input-email">
+                  Email Address <span className="read-only-badge">Managed by Auth</span>
+                </label>
+                <input
+                  id="input-email"
+                  type="email"
+                  className="input-profile read-only"
+                  value={email}
+                  readOnly
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div className="profile-form-row">
+              <div className="form-group-profile">
+                <label htmlFor="input-headline">Professional Headline</label>
+                <input
+                  id="input-headline"
+                  type="text"
+                  className={`input-profile ${fieldErrors.headline ? "has-error" : ""}`}
+                  placeholder="e.g. Senior Full-Stack Engineer"
+                  value={profile.headline}
+                  onChange={(e) => handleChange("headline", e.target.value)}
+                  maxLength={150}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.headline && (
+                  <span className="field-error-text">{fieldErrors.headline}</span>
+                )}
+              </div>
+
+              <div className="profile-form-row-nested form-group-profile">
+                <label htmlFor="input-location">Location</label>
+                <input
+                  id="input-location"
+                  type="text"
+                  className={`input-profile ${fieldErrors.location ? "has-error" : ""}`}
+                  placeholder="e.g. San Francisco, CA • Remote"
+                  value={profile.location}
+                  onChange={(e) => handleChange("location", e.target.value)}
+                  maxLength={100}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.location && (
+                  <span className="field-error-text">{fieldErrors.location}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="profile-form-row">
+              <div className="form-group-profile">
+                <label htmlFor="input-phone">Phone Number</label>
+                <input
+                  id="input-phone"
+                  type="tel"
+                  className={`input-profile ${fieldErrors.phone ? "has-error" : ""}`}
+                  placeholder="e.g. +1 (555) 012-3456"
+                  value={profile.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  maxLength={30}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.phone && (
+                  <span className="field-error-text">{fieldErrors.phone}</span>
+                )}
+              </div>
+
+              <div className="form-group-profile">
+                <label htmlFor="input-website">Personal Website</label>
+                <input
+                  id="input-website"
+                  type="url"
+                  className={`input-profile ${fieldErrors.website ? "has-error" : ""}`}
+                  placeholder="https://yourwebsite.com"
+                  value={profile.website}
+                  onChange={(e) => handleChange("website", e.target.value)}
+                  maxLength={255}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.website && (
+                  <span className="field-error-text">{fieldErrors.website}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="form-group-profile">
+              <label htmlFor="input-bio">Bio / Summary</label>
+              <textarea
+                id="input-bio"
+                className={`textarea-profile ${fieldErrors.bio ? "has-error" : ""}`}
+                placeholder="Tell recruiters about your background, strengths, and what drives you..."
+                rows={4}
+                value={profile.bio}
+                onChange={(e) => handleChange("bio", e.target.value)}
+                maxLength={1000}
+                disabled={isSaving || isLoading}
+              />
+              <div className="bio-char-count">
+                {profile.bio?.length || 0} / 1000
+              </div>
+              {fieldErrors.bio && (
+                <span className="field-error-text">{fieldErrors.bio}</span>
+              )}
+            </div>
+
+            <h3 style={{ margin: "2rem 0 1rem 0" }}>🔗 Social Links</h3>
+            <div className="profile-form-row">
+              <div className="form-group-profile">
+                <label htmlFor="input-github">GitHub Profile</label>
+                <input
+                  id="input-github"
+                  type="url"
+                  className={`input-profile ${fieldErrors.github ? "has-error" : ""}`}
+                  placeholder="https://github.com/username"
+                  value={profile.github}
+                  onChange={(e) => handleChange("github", e.target.value)}
+                  maxLength={255}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.github && (
+                  <span className="field-error-text">{fieldErrors.github}</span>
+                )}
+              </div>
+
+              <div className="form-group-profile">
+                <label htmlFor="input-linkedin">LinkedIn Profile</label>
+                <input
+                  id="input-linkedin"
+                  type="url"
+                  className={`input-profile ${fieldErrors.linkedin ? "has-error" : ""}`}
+                  placeholder="https://linkedin.com/in/username"
+                  value={profile.linkedin}
+                  onChange={(e) => handleChange("linkedin", e.target.value)}
+                  maxLength={255}
+                  disabled={isSaving || isLoading}
+                />
+                {fieldErrors.linkedin && (
+                  <span className="field-error-text">{fieldErrors.linkedin}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

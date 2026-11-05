@@ -208,6 +208,12 @@
   color: #c084fc;
 }
 
+.nav-badge-pill.ai {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(129, 140, 248, 0.45);
+  color: #a5b4fc;
+}
+
 .nav-badge-pill.soon {
   background: rgba(138, 150, 255, 0.15);
   border: 1px solid rgba(138, 150, 255, 0.35);
@@ -363,4 +369,9 @@
 [data-dashboard-theme="light"] .user-name-text,
 .dashboard-root.light .user-name-text {
   color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .user-role-text,
+.dashboard-root.light .user-role-text {
+  color: #64748B;
 }

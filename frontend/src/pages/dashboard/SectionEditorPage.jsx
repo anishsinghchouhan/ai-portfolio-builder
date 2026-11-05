@@ -52,20 +52,21 @@ export const SectionEditorPage = ({ portfolioId, onSave, onBack }) => {
         if (isMounted) {
           setPortfolio(fetchedPortfolio);
           const c = fetchedPortfolio.content || {};
+          const about = c.about || {};
           const p = c.personal || {};
 
           setFormData({
-            name: p.name || fetchedPortfolio.user?.fullName || "",
-            role: p.headline || fetchedPortfolio.user?.headline || "",
-            location: p.location || fetchedPortfolio.user?.location || "",
-            aboutText: p.bio || c.about?.description || fetchedPortfolio.user?.bio || "",
+            name: about.name || p.name || fetchedPortfolio.user?.fullName || "",
+            role: about.title || about.headline || p.headline || p.title || fetchedPortfolio.user?.headline || "",
+            location: about.location || p.location || fetchedPortfolio.user?.location || "",
+            aboutText: about.bio || about.description || p.bio || p.description || fetchedPortfolio.user?.bio || "",
             skillsList: Array.isArray(c.skills) ? c.skills.join(", ") : (c.skillsList || ""),
-            experienceTitle: c.experience?.[0]?.title || "",
-            experienceBullets: c.experience?.[0]?.description || "",
+            experienceTitle: c.experiences?.[0]?.role || c.experience?.[0]?.title || "",
+            experienceBullets: c.experiences?.[0]?.description || c.experience?.[0]?.description || "",
             projectTitle: c.projects?.[0]?.title || "",
-            projectUrl: c.projects?.[0]?.liveUrl || "",
+            projectUrl: c.projects?.[0]?.liveUrl || c.projects?.[0]?.url || "",
             certName: c.certifications?.[0] || "",
-            contactEmail: p.email || fetchedPortfolio.user?.email || "",
+            contactEmail: about.email || p.email || fetchedPortfolio.user?.email || "",
             avatarUrl: p.avatarUrl || fetchedPortfolio.user?.avatarUrl || "",
           });
         }

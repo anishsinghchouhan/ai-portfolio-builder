@@ -379,48 +379,111 @@
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
+[data-dashboard-theme="light"] .portfolio-status-widget-root,
+.dashboard-root.light .portfolio-status-widget-root {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+}
+
 [data-dashboard-theme="light"] .status-widget-title h3,
+.dashboard-root.light .status-widget-title h3,
 .portfolio-status-widget-root.light .status-widget-title h3 {
   color: #0F172A;
 }
 
 [data-dashboard-theme="light"] .status-widget-title p,
+.dashboard-root.light .status-widget-title p,
 .portfolio-status-widget-root.light .status-widget-title p {
   color: #64748B;
 }
 
+[data-dashboard-theme="light"] .btn-how-calculated-toggle,
+.dashboard-root.light .btn-how-calculated-toggle {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+[data-dashboard-theme="light"] .btn-how-calculated-toggle:hover,
+.dashboard-root.light .btn-how-calculated-toggle:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .readiness-breakdown-panel,
+.dashboard-root.light .readiness-breakdown-panel {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+[data-dashboard-theme="light"] .breakdown-header h4,
+.dashboard-root.light .breakdown-header h4 {
+  color: #0F172A;
+}
+
+[data-dashboard-theme="light"] .breakdown-header p,
+.dashboard-root.light .breakdown-header p {
+  color: #64748B;
+}
+
+[data-dashboard-theme="light"] .breakdown-check-card,
+.dashboard-root.light .breakdown-check-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+}
+
+[data-dashboard-theme="light"] .breakdown-check-card.completed,
+.dashboard-root.light .breakdown-check-card.completed {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: #F0FDF4;
+}
+
+[data-dashboard-theme="light"] .breakdown-check-card.pending,
+.dashboard-root.light .breakdown-check-card.pending {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: #FFFBEB;
+}
+
 [data-dashboard-theme="light"] .ring-bg-track,
+.dashboard-root.light .ring-bg-track,
 .portfolio-status-widget-root.light .ring-bg-track {
   stroke: #E2E8F0;
 }
 
 [data-dashboard-theme="light"] .ring-percentage-num,
+.dashboard-root.light .ring-percentage-num,
 .portfolio-status-widget-root.light .ring-percentage-num {
   color: #0F172A;
 }
 
 [data-dashboard-theme="light"] .ring-percentage-label,
+.dashboard-root.light .ring-percentage-label,
 .portfolio-status-widget-root.light .ring-percentage-label {
   color: #64748B;
 }
 
 [data-dashboard-theme="light"] .last-saved-time,
+.dashboard-root.light .last-saved-time,
 .portfolio-status-widget-root.light .last-saved-time {
   color: #64748B;
 }
 
 [data-dashboard-theme="light"] .checklist-box,
+.dashboard-root.light .checklist-box,
 .portfolio-status-widget-root.light .checklist-box {
   background: #F8FAFC;
   border-color: #E2E8F0;
 }
 
 [data-dashboard-theme="light"] .checklist-title,
+.dashboard-root.light .checklist-title,
 .portfolio-status-widget-root.light .checklist-title {
   color: #0F172A;
 }
 
 [data-dashboard-theme="light"] .checklist-item,
+.dashboard-root.light .checklist-item,
 .portfolio-status-widget-root.light .checklist-item {
   color: #334155;
 }

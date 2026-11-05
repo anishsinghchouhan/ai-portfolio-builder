@@ -347,13 +347,12 @@
 
 /* Device Frame Simulation */
 .preview-device-frame {
-  background: #ffffff;
+  background: transparent;
   border-radius: 20px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
-  color: #0f172a;
   text-align: left;
 }
 

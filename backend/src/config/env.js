@@ -22,6 +22,7 @@ const envSchema = z
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
     ANALYTICS_SALT: z.string().min(16, "ANALYTICS_SALT must be at least 16 characters").optional(),
     GEMINI_API_KEY: z.string().optional(),
+    SUPABASE_STORAGE_BUCKET: z.string().optional().default("resumes"),
   })
   .refine(
     (data) => {

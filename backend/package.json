@@ -13,6 +13,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@google/genai": "^2.32.0",
     "@prisma/client": "^6.3.1",
     "@supabase/supabase-js": "^2.48.1",
     "bcryptjs": "^2.4.3",
@@ -23,6 +24,8 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "multer": "^2.5.0",
+    "pdf-parse": "^2.4.5",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
   },
